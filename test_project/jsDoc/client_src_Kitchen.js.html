@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/Kitchen.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/Kitchen.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { Component } from "react";
+//import logo from "./logo.svg";
+import "./App.css";
+//import { BrowserRouter as Router, Route, Link, Routes } from 'react-router-dom';
+//import Ingredients from './Ingredients';
+import ConfirmationPopup from "./ConfirmationPopup";
+
+/**
+ * Represents the Kitchen component responsible for displaying and managing current orders.
+ * @extends Component
+ */
+class Kitchen extends Component {
+    /**
+     * Creates an instance of Kitchen.
+     * @param {object} props - The properties passed to the component.
+     */
+    constructor(props) {
+        super(props);
+        this.state = { orders: [],
+            isConfirmationPopupOpen: false,
+            message: ""}
+    }
+
+    /**
+ * Fetches the current orders from the API.
+ * @returns {Promise} A Promise that resolves when the orders are fetched and updated in the component's state.
+ * @method
+ */
+    async callAPI() {
+        try {
+            const res = await fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/customerOrdersAPI/currentOrders");
+            const latestOrders = await res.json();
+            this.setState({ orders: latestOrders }, () => {
+                console.log("All orders details fetched successfully");
+                console.log(this.state.orders);
+            });
+        } catch (error) {
+            console.error("Error fetching orders:", error);
+        }
+    }
+
+    // async callAPI() {
+    //     try {
+    //         const res = await fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/customerOrdersAPI/customerOrdersCurrent");
+    //         const latestOrders = await res.json();
+    
+    //         // Update the state with the latest orders
+    //         this.setState({ orders: latestOrders }, async () => {
+    //             // Fetch order details and customizations for each order
+    //             await Promise.all(this.state.orders.map(order => this.getOrderDetails(order.order_number)));
+    
+    //             console.log("All orders details fetched successfully");
+    //             console.log(this.state.orders);
+    //         });
+    //     } catch (error) {
+    //         console.error(error);
+    //     }
+    // }
+    
+     /**
+     * Fetches the current orders from the API when the component mounts.
+     * @method
+     */
+    componentDidMount() {
+        // Call callAPI() initially
+        this.callAPI();
+        // Set interval to call callAPI() every minute (60 seconds)
+        this.refreshInterval = setInterval(() => {
+            this.callAPI();
+        }, 60000); // 60000 milliseconds = 1 minute
+        // Initialize Google Translate
+        this.initializeGoogleTranslate();
+    }
+    
+    /**
+     * Clears the refresh interval when the component unmounts to prevent memory leaks.
+     * @method
+     */
+    componentWillUnmount() {
+        // Clear the interval when the component is unmounted to prevent memory leaks
+        clearInterval(this.refreshInterval);
+    }
+
+     /**
+     * Initializes the Google Translate element when it's not already initialized.
+     * @method
+     */
+    initializeGoogleTranslate() {
+        if (!window.googleTranslateElementInit) {
+            const script = document.createElement("script");
+            script.type = "text/javascript";
+            script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+            script.async = true;
+            document.body.appendChild(script);
+            window.googleTranslateElementInit = this.googleTranslateElementInit.bind(this);
+        }
+    }
+
+    /**
+     * Initializes the Google Translate element.
+     * @method
+     */
+    googleTranslateElementInit() {
+        new window.google.translate.TranslateElement({ pageLanguage: "en" }, "google_translate_element");
+    }
+
+    /**
+     * Toggles the confirmation popup's visibility.
+     * @method
+     */
+    toggleConfirmationPopup = () => {
+        this.setState(prevState => ({ isConfirmationPopupOpen: !prevState.isConfirmationPopupOpen }));
+    };
+
+    /**
+     * Fetches the details of a specific order.
+     * @param {number} orderNumber - The order number.
+     * @method
+     * @returns {Promise} A Promise that resolves when the order details are fetched.
+     */
+    getOrderDetails = async (orderNumber) => {
+        try {
+            const response = await fetch(`https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/customerOrdersAPI/customerOrderDetails/${orderNumber}`);
+            const orderDetails = await response.json();
+    
+            // Merge orderDetails with existing order details
+            const updatedOrders = this.state.orders.map(order => {
+                if (order.order_number === orderNumber) {
+                    return { ...order, orderDetails }; // Assuming orderDetails is an array
+                }
+                return order;
+            });
+    
+            // Update state with the updated orders
+            await new Promise(resolve => {
+                this.setState(prevState => ({
+                    orders: updatedOrders.map(order => ({
+                        ...order,
+                        orderDetails: order.orderDetails || [] // Ensure orderDetails is initialized
+                    }))
+                }), resolve);
+            });
+
+            this.state.orders.forEach(order => {
+                order.orderDetails.forEach(detail => {
+                    detail.customizations = [];
+                });
+            });
+    
+            // Fetch customizations for each order detail if customized is true
+            const promises = orderDetails
+                .filter(detail => detail.customized)
+                .map(detail => this.getOrderCustomizations(detail.id));
+            return Promise.all(promises);
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Fetches the customizations for a specific order detail.
+     * @param {number} orderDetailId - The order detail ID.
+     * @method
+     * @returns {Promise} A Promise that resolves when the customizations are fetched.
+     */
+    getOrderCustomizations = async (orderDetailId) => {
+        console.log("hello");
+        try {
+            const response = await fetch(`https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/customerOrdersAPI/customerOrderCustomizations/${orderDetailId}`);
+            const customizations = await response.json();
+    
+            // Update orderDetails with customizations
+            await new Promise(resolve => {
+                this.setState(prevState => ({
+                    orders: prevState.orders.map(order => ({
+                        ...order,
+                        orderDetails: order.orderDetails.map(detail => {
+                            if (detail.id === orderDetailId) {
+                                return { ...detail, customizations };
+                            }
+                            return detail;
+                        })
+                    }))
+                }), resolve);
+            });
+    
+            // Log everything after customizations
+            console.log("Customizations applied for orderDetailId:", orderDetailId);
+            console.log("Updated orders:", this.state.orders);
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+
+    /**
+     * Sets a message in the component's state.
+     * @param {string} message - The message to set.
+     * @method
+     */
+    setMessage(message)
+    {
+        this.setState({message: message});
+    }
+
+   /**
+     * Handles the completion of an order.
+     * @param {number} order_number - The order number.
+     * @method
+     */
+    handleComplete = (order_number) => {
+        // Handle completion logic
+        const order_status = 0; // Assuming 0 represents completed status
+
+    // Prepare the request body
+        const requestBody = {
+            order_number: order_number,
+            order_status: order_status
+        };
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/customerOrdersAPI/update", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestBody)
+        })
+            .then(res => res.text())
+            .then(data => {
+                this.callAPI();
+                this.setMessage(`Order Number: ${order_number} has been successfully marked as complete.`);
+                this.toggleConfirmationPopup();
+                
+            })
+            .catch(err => console.error(err));
+
+    };
+
+    /**
+     * Handles the cancellation of an order.
+     * @param {number} order_number - The order number.
+     * @method
+     */
+    handleCancel = (order_number) => {
+        // Handle completion logic
+        const order_status = -1; // Assuming 0 represents completed status
+
+        // Prepare the request body
+        const requestBody = {
+            order_number: order_number,
+            order_status: order_status
+        };
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/customerOrdersAPI/update", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestBody)
+        })
+            .then(res => res.text())
+            .then(data => {
+                this.callAPI();
+                this.setMessage(`Order Number: ${order_number} has been successfully cancelled.`);
+                this.toggleConfirmationPopup();
+                
+            })
+            .catch(err => console.error(err));
+
+    };
+
+    
+   
+/**
+     * Renders the table of current orders.
+     * @returns {JSX.Element} The JSX element representing the table of orders.
+     * @method
+     */
+    renderTable() {
+        const { orders } = this.state;
+    
+        // Check if orders and their details are available
+        const ordersReady = orders.every(order =>
+            typeof order.orderDetails !== 'undefined' &amp;&amp; // Check if orderDetails is defined
+            order.orderDetails.length > 0 &amp;&amp; 
+            order.orderDetails.every(detail =>
+                typeof detail.customizations !== 'undefined' &amp;&amp; 
+                (!detail.customized || (detail.customized &amp;&amp; detail.customizations.length > 0))
+            )
+        );
+        
+    
+        // Split orders into groups of three
+        const rows = [];
+        for (let i = 0; i &lt; orders.length; i += 3) {
+            rows.push(orders.slice(i, i + 3));
+        }
+    
+        return (
+            &lt;div>
+                {ordersReady &amp;&amp; rows.map((row, rowIndex) => (
+                    &lt;div key={rowIndex} className="order-row">
+                        {row.map((order, index) => (
+                            &lt;div key={index} className="order-container">
+                                &lt;div className="order-details" style={{ border: "1px solid black", marginBottom: "20px", padding: "10px" }}>
+                                    &lt;h2>Order Number: {order.order_number}&lt;/h2>
+                                    &lt;h3>Date: {order.order_date.split('T')[0]}&lt;/h3>
+                                    &lt;h3>Time: {order.order_time}&lt;/h3>
+                                    &lt;h3>Notes: {order.notes ? order.notes : '-'}&lt;/h3>
+                                    &lt;div>
+                                        {order.orderDetails.map((detail, idx) => (
+                                           &lt;div key={idx} style={{ border: "2px solid maroon", borderRadius: "5px", padding: "10px", marginBottom: "10px", textAlign: "left" }} className="order-detail">
+                                                &lt;h4>{detail.menu_item} - Quantity: {detail.quantity}&lt;/h4>
+                                                &lt;h5 style={{ marginLeft: "20px" }}>Customizations:&lt;/h5>
+                                                {detail.customized ? (
+                                                        &lt;div>
+                                                        &lt;ul style={{marginLeft: "20px"}}>
+                                                            {detail.customizations.map((customization, cIdx) => (
+                                                                &lt;li key={cIdx}>{customization.ingredient} - {customization.quantity_change}&lt;/li>
+                                                            ))}
+                                                        &lt;/ul>
+                                                        &lt;/div>
+
+                                                ) : (
+                                                    &lt;ul style={{marginLeft: "20px"}}>&lt;li>None&lt;/li>&lt;/ul>
+                                                )}
+                                            &lt;/div>
+                                        ))}
+                                    &lt;/div>
+                                    &lt;button onClick={() => this.handleComplete(order.order_number)}>Complete&lt;/button>
+                                    &lt;button onClick={() => this.handleCancel(order.order_number)}>Cancel&lt;/button>
+                                &lt;/div>
+                            &lt;/div>
+                        ))}
+                    &lt;/div>
+                ))}
+            &lt;/div>
+        );
+    }
+    /**
+     * Renders the Kitchen component.
+     * @returns {JSX.Element} The JSX element representing the Kitchen component.
+     * @method
+     */
+
+    render() {
+        // console.log(this.state.orders);
+        const { orders } = this.state;
+
+    // // Check if orders and their details are available
+    // const ordersReady = orders.every(order => 
+    //     order.orderDetails &amp;&amp; 
+    //     order.orderDetails.every(detail => 
+    //         typeof detail.customizations !== 'undefined' &amp;&amp; 
+    //         (!detail.customized || (detail.customized &amp;&amp; detail.customizations.length > 0))
+    //     )
+    // );
+    
+        return (
+                &lt;div className="OrderDisplay" style={{fontSize:(localStorage.getItem('textsize')*16), fontWeight: localStorage.getItem('boldtext'), filter: `invert(${localStorage.getItem('colorinv')})`}}>
+                    &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/settings">&lt;button id="settingsbutton">Settings&lt;/button>&lt;/a>
+                    &lt;button id="refreshbutton" onClick={() => this.callAPI()}>Refresh&lt;/button>
+                    &lt;header className="Employee-header">
+                        &lt;h1 className="Employee-title">Kitchen&lt;/h1>
+                    &lt;/header>
+                    &lt;div className="navigation-buttons">
+                            {/* Navigation Buttons */}
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/Ingredients">&lt;button>Inventory&lt;/button> &lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/Trends">&lt;button>Trends&lt;/button> &lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/Suppliers">&lt;button>Supplier Order&lt;/button> &lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/MenuManager">&lt;button>Edit Menu&lt;/button> &lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/employees"> &lt;button >Employee List&lt;/button>&lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/OrderDisplays"> &lt;button  >Previous Orders&lt;/button>&lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/kitchen"> &lt;button id = "selected">Kitchen&lt;/button>&lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/managerOrders"> &lt;button >Order&lt;/button>&lt;/a>
+                        &lt;/div>
+                    &lt;div>
+                        &lt;h2>Current Orders:&lt;/h2>
+                        {this.renderTable()}
+                    &lt;/div>
+
+                    {this.state.isConfirmationPopupOpen &amp;&amp; (
+                &lt;   ConfirmationPopup
+                        onClose={this.toggleConfirmationPopup}
+                        message={this.state.message}
+                />
+            )}
+                    &lt;div id="google_translate_element">&lt;/div>
+                &lt;/div>
+        );
+    }
+}
+
+export default Kitchen;
+
+
+
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-AddEmployeePopup.html">AddEmployeePopup</a></li><li><a href="module-App.html">App</a></li><li><a href="module-ConfirmationPopup.html">ConfirmationPopup</a></li><li><a href="module-CustomerOrdersAPI.html">CustomerOrdersAPI</a></li><li><a href="module-DisplayOrder.html">DisplayOrder</a></li><li><a href="module-EditEmployeePopup.html">EditEmployeePopup</a></li><li><a href="module-EditIngredientPopup.html">EditIngredientPopup</a></li><li><a href="module-EmployeesRouter.html">EmployeesRouter</a></li><li><a href="module-Ingredients.html">Ingredients</a></li><li><a href="module-IngredientsRouter.html">IngredientsRouter</a></li><li><a href="module-MenuItemIngredientsRouter.html">MenuItemIngredientsRouter</a></li><li><a href="module-MenuItemsAPI.html">MenuItemsAPI</a></li><li><a href="module-SupplierOrderRouter.html">SupplierOrderRouter</a></li><li><a href="module-Suppliers.html">Suppliers</a></li><li><a href="module-Trends.html">Trends</a></li><li><a href="module-TrendsAPI.html">TrendsAPI</a></li><li><a href="module-landingAPI.html">landingAPI</a></li></ul><h3>Classes</h3><ul><li><a href="AddIngredientPopup.html">AddIngredientPopup</a></li><li><a href="AddMenuItemPopup.html">AddMenuItemPopup</a></li><li><a href="CashierOrders.html">CashierOrders</a></li><li><a href="CashierSubmit.html">CashierSubmit</a></li><li><a href="CustomerOrders.html">CustomerOrders</a></li><li><a href="CustomerSubmit.html">CustomerSubmit</a></li><li><a href="EditMenuItemPopup.html">EditMenuItemPopup</a></li><li><a href="Employees.html">Employees</a></li><li><a href="HandleOAuth.html">HandleOAuth</a></li><li><a href="Kitchen.html">Kitchen</a></li><li><a href="Landing.html">Landing</a></li><li><a href="ManagerOrders.html">ManagerOrders</a></li><li><a href="ManagerSubmit.html">ManagerSubmit</a></li><li><a href="MenuBoard.html">MenuBoard</a></li><li><a href="MenuBoard2.html">MenuBoard2</a></li><li><a href="MenuBoardImages.html">MenuBoardImages</a></li><li><a href="MenuItemPopUp.html">MenuItemPopUp</a></li><li><a href="MenuManager.html">MenuManager</a></li><li><a href="NewSupplierOrderForm.html">NewSupplierOrderForm</a></li><li><a href="OrderCompletePopUp.html">OrderCompletePopUp</a></li><li><a href="OrderDisplays.html">OrderDisplays</a></li><li><a href="RegularKitchen.html">RegularKitchen</a></li><li><a href="Settings.html">Settings</a></li><li><a href="SupplierOrderDetailsPopUp.html">SupplierOrderDetailsPopUp</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed May 01 2024 01:21:47 GMT-0500 (Central Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/MenuItemPopUp.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/MenuItemPopUp.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>// MenuItemPopUp.js
+import React, { Component } from "react";
+import "./MenuItemPopUp.css";
+
+/**
+ * @author Joanne Liu
+ * Represents a pop-up window for displaying menu item details and ingredient selection for menu item selected on order screen.
+ */
+class MenuItemPopUp extends Component {
+     /**
+     * Creates an instance of MenuItemPopUp.
+     * @param {object} props - The properties passed to the component.
+     */
+    constructor(props) {
+        super(props);
+        this.state = {
+            errorQuantity: false,
+            selectedIngredients: {}, // Track selected ingredients
+            groupedIngredients: {}
+        };
+    }
+
+     /**
+     * Lifecycle method invoked immediately after the component is mounted.
+     * Starts autoplay for the slideshow.
+     */
+    componentDidMount() {
+        this.getGroupedIngredients();
+    }
+
+
+    /**
+     * Lifecycle method invoked immediately after updating occurs.
+     * Updates the grouped ingredients if the menu item changes.
+     * @param {object} prevProps - The previous properties of the component.
+     */
+    componentDidUpdate(prevProps) {
+        if (prevProps.menuItem !== this.props.menuItem) {
+            this.getGroupedIngredients();
+            // this.copyMenuItem();
+        }
+    }
+
+     /**
+     * Handles the change in quantity of a specific ingredient.
+     * @param {string} name - The name of the ingredient.
+     * @param {string} action - The action to perform ('increase' or 'decrease').
+     */
+    handleQuantityChange(name, action) {
+        const { menuItem, update } = this.props;
+        const updatedMenuItem = { ...menuItem };
+        this.setState({errorQuantity: false});
+        // switch (type) {
+        //     case 'increase':
+        //         updatedMenuItem.ingredients[key].quantity++;
+        //         break;
+        //     case 'decrease':
+        //         if (updatedMenuItem.ingredients[key].quantity > 0) {
+        //             updatedMenuItem.ingredients[key].quantity--;
+        //         } else {
+        //             this.setState({errorQuantity: true});
+        //         }
+        //         break;
+        //     default:
+        //         break;
+        // }
+
+        const updatedIngredients = updatedMenuItem.ingredients.map(ing => {
+            if (ing.name === name) {
+                // Update the quantity based on the action
+                if (action === 'increase') {
+                    return { ...ing, quantity: ing.quantity + 1 };
+                } else if (action === 'decrease') {
+                    if(ing.quantity === 0) {
+                        this.setState({ errorQuantity: true });
+                        return ing;
+                    }
+                    return { ...ing, quantity: ing.quantity - 1 }; // Ensure quantity doesn't go below 0
+                }
+            }
+            return ing; // Return the original item if it doesn't match the name
+        });
+
+        updatedMenuItem.ingredients = updatedIngredients;
+
+        console.log("quantity change: ", updatedMenuItem);
+        update(updatedMenuItem);
+    }
+
+    /**
+     * Handles the change in quantity of ingredients based on type.
+     * @param {string} type - The type of ingredient.
+     * @param {string} action - The action to perform ('increase' or 'decrease').
+     */
+    handleTypeQuantityChange(type, action) {
+        const { menuItem, update } = this.props;
+        const updatedMenuItem = { ...menuItem };
+        // const {groupedIngredients} = this.state;
+        this.setState({ errorQuantity: false });
+
+        const ingredientName = this.findSelected(type);
+
+        const updatedIngredients = updatedMenuItem.ingredients.map(ing => {
+            if (ing.name === ingredientName) {
+                // Update the quantity based on the action
+                if (action === 'increase') {
+                    return { ...ing, quantity: ing.quantity + 1 };
+                } else if (action === 'decrease') {
+                    if(ing.quantity === 0) {
+                        this.setState({ errorQuantity: true });
+                        return ing;
+                    }
+                    return { ...ing, quantity: ing.quantity - 1 }; // Ensure quantity doesn't go below 0
+                }
+            }
+            return ing; // Return the original item if it doesn't match the name
+        });
+        updatedMenuItem.ingredients = updatedIngredients;
+
+        update(updatedMenuItem);
+    }
+
+     /**
+     * Handles the change of selected ingredient within a group.
+     * @param {string} group - The group of ingredients.
+     * @param {number} index - The index of the selected ingredient.
+     */
+    handleTypeChange = (group, index) => {
+        const updatedIngredients = { ...this.state.groupedIngredients };
+        const { menuItem, update } = this.props;
+        updatedIngredients[group].forEach((ingredient, i) => {
+          if (i === index) {
+            ingredient.isSelected = true; // Set the clicked ingredient to selected
+          } else {
+            ingredient.isSelected = false; // Set all other ingredients to not selected
+          }
+        });
+
+        const updatedMenuItem = { ...menuItem };
+        updatedMenuItem.ingredients.forEach(ingredient => {
+            updatedIngredients[group].forEach(updatedIng => {
+                if (ingredient.name === updatedIng.name) {
+                    if (updatedIng.isSelected) {
+                        ingredient.quantity = updatedIng.defaultQuantity;
+                    } else {
+                        ingredient.quantity = 0;
+                    }
+                }
+            });
+        });
+    
+        this.setState({ groupedIngredients: updatedIngredients });
+        update(updatedMenuItem);
+    };
+
+     /**
+     * Retrieves and groups ingredients based on type.
+     */
+    getGroupedIngredients() {
+        const { menuItem, ingredientData} = this.props;
+
+        console.log("in grouped: ", menuItem);
+    
+        const newGroupedIngredients = menuItem.ingredients
+            .filter(ingredient => ingredient.quantity >= 0)
+            .filter(ingredient => ingredientData[ingredient.name].custom)
+            .filter(ingredient => ingredient.name.includes(" - "))
+            .reduce((acc, ingredient) => {
+                const [type] = ingredient.name.split(" - ");
+                if (!acc[type]) {
+                    acc[type] = [];
+                }
+    
+                // Find the first non-zero quantity ingredient within the same type
+                const selectedItem = menuItem.ingredients.find(item => item.name.startsWith(type) &amp;&amp; item.quantity > 0);
+                const defaultQuantity = selectedItem ? selectedItem.quantity : 0;
+    
+                // Add a property to indicate if the ingredient is selected
+                const isSelected = ingredient.quantity > 0;
+    
+                acc[type].push({ name: ingredient.name, isSelected, defaultQuantity });
+    
+                return acc;
+            }, {});
+    
+        this.setState({ groupedIngredients: newGroupedIngredients }); 
+    }
+
+    /**
+     * Finds the quantity of an ingredient by name.
+     * @param {string} name - The name of the ingredient.
+     * @returns {number} The quantity of the ingredient.
+     */
+    findQuantityByName(name) {
+        const { menuItem } = this.props;
+        const { ingredients } = menuItem;
+    
+        // Find the ingredient with the given name
+        const ingredient = ingredients.find(ing => ing.name === name);
+    
+        // Return the quantity if the ingredient is found, otherwise return 0
+        return ingredient ? ingredient.quantity : 0;
+    }
+
+    /**
+     * Finds the selected ingredient within a group.
+     * @param {string} type - The type of ingredient.
+     * @returns {string} The name of the selected ingredient.
+     */
+    findSelected(type) {
+        const { groupedIngredients } = this.state;
+        const selectedIngredient = groupedIngredients[type].find(ing => ing.isSelected);
+        const ingredientName = selectedIngredient ? selectedIngredient.name : '';
+        return ingredientName;
+    }
+
+     /**
+     * Renders the MenuItemPopUp component.
+     * @returns {JSX.Element} The JSX representation of the component.
+     */
+    render() {
+        const { onAdd, onRemove, menuItem, menuItemData, ingredientData} = this.props;
+        const { errorQuantity, groupedIngredients} = this.state;
+
+        return (
+            &lt;div className = "popup-window" /*style={{fontSize:(localStorage.getItem('textsize')*16), fontWeight: localStorage.getItem('boldtext'), filter: `invert(${localStorage.getItem('colorinv')})`}}*/>
+                &lt;div className = "info-row">
+                    &lt;img
+                        id="menuItemImage"
+                        src={menuItemData.picture}
+                        alt={"Image for " + menuItem.item}
+                    />
+                    &lt;h2>{menuItem.item}&lt;/h2>
+                    &lt;p>{menuItemData.descript}&lt;/p>
+                    &lt;p> Vegetarian: {menuItemData.veg ? 'Yes' : 'No'} &lt;/p>
+                    &lt;p> Gluten Free: {menuItemData.gf ? 'Yes' : 'No'} &lt;/p>
+                &lt;/div>
+                &lt;div className = "ing-list-row">
+                    &lt;p>
+                        &lt;strong>Ingredients:&lt;/strong>{' '}
+                        {menuItem.ingredients
+                            .filter(ingredient => ingredientData[ingredient.name].location !== "Storage")
+                            .filter(ingredient => ingredient.quantity > 0)
+                            .map((ingredient, index, array) => (
+                                &lt;span key={index}>{ingredient.name}{index !== array.length - 1 ? ', ' : ''} &lt;/span>
+                            ))
+                        }
+                    &lt;/p>
+                &lt;/div>
+                {menuItem.ingredients
+                    .filter(ingredient => ingredient.quantity >= 0)
+                    .filter(ingredient  => ingredientData[ingredient.name].custom)
+                    .filter(ingredient => !ingredient.name.includes(" - "))
+                    // .filter(ingredient => ingredientData[ingredient.name].location !== "Storage")
+                    .map((ingredient, index) => (
+                        &lt;div key={index} className = "ing-row">
+                            {/* &lt;label>{ingredient.quantity} {ingredient.name}&lt;/label> */}
+                            &lt;p>{ingredient.quantity}&lt;/p>
+                            &lt;div style={{ width: '20px' }}>&lt;/div>
+                            &lt;button className="quantity-button" onClick={() => this.handleQuantityChange(ingredient.name, 'increase')}>+&lt;/button>
+                            &lt;button className="quantity-button" onClick={() => this.handleQuantityChange(ingredient.name, 'decrease')}>-&lt;/button>
+                            &lt;div style={{ width: '30px' }}>&lt;/div>
+                            &lt;p>{ingredient.name}&lt;/p>
+                            &lt;div style={{ width: '100px' }}>&lt;/div>
+                        &lt;/div>
+                ))}
+                {Object.keys(groupedIngredients).map((key) => (
+                    &lt;div key={key} className="grouped-ing-row">
+                        &lt;p>{this.findQuantityByName(this.findSelected(key))}&lt;/p>
+                        &lt;div style={{ width: '20px' }}>&lt;/div>
+                        &lt;button className="quantity-button" onClick={() => this.handleTypeQuantityChange(key, 'increase')}>+&lt;/button>
+                        &lt;button className="quantity-button" onClick={() => this.handleTypeQuantityChange(key, 'decrease')}>-&lt;/button>
+                        &lt;div style={{ width: '30px' }}>&lt;/div>
+                        &lt;p>{key}&lt;/p>
+                        &lt;div style={{ width: '30px' }}>&lt;/div>
+                        {groupedIngredients[key].map((ingredient, index) => (
+                        &lt;button
+                            key={index}
+                            onClick={() => this.handleTypeChange(key, index)}
+                            className={ingredient.isSelected ? "grouped-ing-selected-button" : "grouped-ing-button"}
+                        >
+                            {ingredient.name.slice(ingredient.name.indexOf(" - ") + 3)} 
+                        &lt;/button>
+                        ))}
+                    &lt;/div>
+                ))}
+                &lt;div className = "error-message">
+                    {errorQuantity &amp;&amp; &lt;h3>Quantity already 0!&lt;/h3>}
+                &lt;/div>
+                &lt;div className="exit-button-container">
+                    &lt;button onClick={() => onRemove(menuItem.item)}>Cancel&lt;/button>
+                    &lt;button onClick={() => onAdd(menuItem)}>Add&lt;/button>
+                &lt;/div>
+            &lt;/div>
+        );
+    }
+}
+
+export default MenuItemPopUp;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-AddEmployeePopup.html">AddEmployeePopup</a></li><li><a href="module-App.html">App</a></li><li><a href="module-ConfirmationPopup.html">ConfirmationPopup</a></li><li><a href="module-CustomerOrdersAPI.html">CustomerOrdersAPI</a></li><li><a href="module-DisplayOrder.html">DisplayOrder</a></li><li><a href="module-EditEmployeePopup.html">EditEmployeePopup</a></li><li><a href="module-EditIngredientPopup.html">EditIngredientPopup</a></li><li><a href="module-EmployeesRouter.html">EmployeesRouter</a></li><li><a href="module-Ingredients.html">Ingredients</a></li><li><a href="module-IngredientsRouter.html">IngredientsRouter</a></li><li><a href="module-MenuItemIngredientsRouter.html">MenuItemIngredientsRouter</a></li><li><a href="module-MenuItemsAPI.html">MenuItemsAPI</a></li><li><a href="module-SupplierOrderRouter.html">SupplierOrderRouter</a></li><li><a href="module-Suppliers.html">Suppliers</a></li><li><a href="module-Trends.html">Trends</a></li><li><a href="module-TrendsAPI.html">TrendsAPI</a></li><li><a href="module-landingAPI.html">landingAPI</a></li></ul><h3>Classes</h3><ul><li><a href="AddIngredientPopup.html">AddIngredientPopup</a></li><li><a href="AddMenuItemPopup.html">AddMenuItemPopup</a></li><li><a href="CashierOrders.html">CashierOrders</a></li><li><a href="CashierSubmit.html">CashierSubmit</a></li><li><a href="CustomerOrders.html">CustomerOrders</a></li><li><a href="CustomerSubmit.html">CustomerSubmit</a></li><li><a href="EditMenuItemPopup.html">EditMenuItemPopup</a></li><li><a href="Employees.html">Employees</a></li><li><a href="HandleOAuth.html">HandleOAuth</a></li><li><a href="Kitchen.html">Kitchen</a></li><li><a href="Landing.html">Landing</a></li><li><a href="ManagerOrders.html">ManagerOrders</a></li><li><a href="ManagerSubmit.html">ManagerSubmit</a></li><li><a href="MenuBoard.html">MenuBoard</a></li><li><a href="MenuBoard2.html">MenuBoard2</a></li><li><a href="MenuBoardImages.html">MenuBoardImages</a></li><li><a href="MenuItemPopUp.html">MenuItemPopUp</a></li><li><a href="MenuManager.html">MenuManager</a></li><li><a href="NewSupplierOrderForm.html">NewSupplierOrderForm</a></li><li><a href="OrderCompletePopUp.html">OrderCompletePopUp</a></li><li><a href="OrderDisplays.html">OrderDisplays</a></li><li><a href="RegularKitchen.html">RegularKitchen</a></li><li><a href="Settings.html">Settings</a></li><li><a href="SupplierOrderDetailsPopUp.html">SupplierOrderDetailsPopUp</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed May 01 2024 01:21:47 GMT-0500 (Central Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

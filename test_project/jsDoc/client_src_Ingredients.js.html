@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/Ingredients.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/Ingredients.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>
+
+import React, { useState, useEffect } from "react";
+import "./App.css";
+import AddIngredientPopup from "./AddIngredientPopUp";
+import EditIngredientPopup from "./EditIngredientPopup";
+import ConfirmationPopup from "./ConfirmationPopup";
+import { useNavigate } from "react-router-dom";
+
+
+/**
+ * Ingredients component for managing ingredients.
+ * @module Ingredients
+ * @author Keeley Mahoney
+ * @returns {JSX.Element} Ingredients component JSX
+ */
+const Ingredients = () => {
+    const navigate = useNavigate();
+
+    const [apiResponse, setAPIResponse] = useState([]);
+    const [updatedData, setUpdatedData] = useState([]);
+    const [selectedIngredient, setSelectedIngredient] = useState("");
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
+    const [newIngredient, setNewIngredient] = useState({
+        ingredient_name: "",
+        quantity: "",
+        quantity_warning: "",
+        storage_location: "",
+        unit: "",
+        vegetarian: false,
+        glutenfree: false,
+        customizable: false
+    });
+    const [editedIngredient, setEditedIngredient] = useState({});
+    const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
+    const [isConfirmationPopupOpen, setIsConfirmationPopupOpen] = useState(false);
+    const [message, setMessage] = useState("");
+
+    /**
+     * Fetches data from the API and initializes Google Translate.
+     * @method callAPI
+     * @returns {void}
+     */
+
+    const callAPI = () => {
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/ingredientsAPI")
+            .then(res => res.json())
+            .then(res => {
+                setAPIResponse(res);
+                setUpdatedData(res);
+            })
+            .catch(err => console.error(err));
+    };
+
+  /**
+ * Calls the API and initializes Google Translate when the component mounts.
+ * @callback useEffect
+ * @method useEffect
+ * @param {Function} effect - The effect function to be executed
+ * @param {Array} dependencies - An array of dependencies for the effect
+ */
+    useEffect(() => {
+        callAPI();
+        initializeGoogleTranslate();
+    }, []); 
+
+    /**
+     * Initializes Google Translate if not already initialized.
+     * @method initializeGoogleTranslate
+     */
+
+    const initializeGoogleTranslate = () => {
+        if (!window.googleTranslateElementInit) {
+            const script = document.createElement("script");
+            script.type = "text/javascript";
+            script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+            script.async = true;
+            document.body.appendChild(script);
+            window.googleTranslateElementInit = googleTranslateElementInit.bind(this);
+        }
+    }
+
+    /**
+     * Initializes Google Translate element.
+     * @method googleTranslateElementInit
+     */
+    const googleTranslateElementInit = () => {
+        new window.google.translate.TranslateElement({ pageLanguage: "en" }, "google_translate_element");
+    }
+
+    
+    /**
+     * Toggles the visibility of the add ingredient popup.
+     * @method togglePopup
+     */
+    const togglePopup = () => {
+        setIsPopupOpen(prevState => !prevState);
+        setNewIngredient ({
+            ingredient_name: "",
+            quantity: "",
+            quantity_warning: "",
+            storage_location: "",
+            unit: "",
+            vegetarian: false,
+            glutenfree: false,
+            customizable: false,
+        });
+    };
+
+    /**
+     * Toggles the visibility of the edit ingredient popup.
+     * @method toggleEditPopup
+     */
+    const toggleEditPopup = () => {
+        setIsEditPopupOpen(prevState => !prevState);
+    };
+
+    /**
+     * Toggles the visibility of the confirmation popup.
+     * @method toggleConfirmationPopup
+     */
+    const toggleConfirmationPopup = () => {
+        setIsConfirmationPopupOpen(prevState => !prevState);
+    };
+
+    /**
+     * Handles input change for existing ingredient in the edit ingredient popup.
+     * @param {Event} e - The input change event
+     * @method handleExistingInputChange
+     * @param {string} key - The key of the input field being changed
+     */
+    const handleExistingInputChange = (e, key) => {
+        const updatedIngredient = { ...editedIngredient };
+
+        if (key === "quantity" || key === "quantity_warning") {
+            if (/^\d+$/.test(e.target.value)) {
+                updatedIngredient[key] = e.target.value;
+                setEditedIngredient(updatedIngredient);
+                console.log(updatedIngredient);
+            } else {
+                alert("Please enter a positive integer containing only digits for quantity or quantity warning.");
+            }
+        } else {
+            updatedIngredient[key] = e.target.value;
+            setEditedIngredient(updatedIngredient);
+            console.log(updatedIngredient);
+        }
+    };
+
+
+     /**
+     * Handles edit button click to open edit ingredient popup.
+     * @method handleEditButtonClick
+     * @param {Object} ingredient - The ingredient object to be edited
+     */
+    const handleEditButtonClick = (ingredient) => {
+        setEditedIngredient(ingredient);
+        setSelectedIngredient(ingredient.ingredient_name);
+        setIsEditPopupOpen(true);
+    };
+
+    /**
+     * Handles input change for adding a new ingredient.
+     * @param {Event} e - The input change event
+     * @method handleInputChange
+     * @param {string} key - The key of the input field being changed
+     */
+    const handleInputChange = (e, key) => {
+       
+        if (key === "quantity" || key === "quantity_warning") {
+            if (/^\d+$/.test(e.target.value)) {
+                setNewIngredient({
+                    ...newIngredient,
+                    [key]: e.target.value
+                });
+            } else {
+                alert("Please enter a positive integer containing only digits for quantity or quantity warning.");
+            }
+        } else {
+            setNewIngredient({
+                ...newIngredient,
+                [key]: e.target.value
+            });
+        }
+    };
+
+ /**
+     * Handles adding a new ingredient to the database.
+     * @method handleAddIngredient
+     */
+const handleAddIngredient = () => {
+
+    const posIngredientIndex = apiResponse.findIndex(
+        ingredient => ingredient.ingredient_name === newIngredient.ingredient_name &amp;&amp; parseInt(ingredient.quantity) > 0
+    );
+
+    if (posIngredientIndex !== -1) {
+        alert("An ingredient with the same name already exists. Please choose a different name.");
+        return;
+    }
+    // Check if the ingredient already exists with a negative quantity value
+    const existingIngredientIndex = apiResponse.findIndex(
+        ingredient => ingredient.ingredient_name === newIngredient.ingredient_name &amp;&amp; parseInt(ingredient.quantity) &lt; 0
+    );
+
+    if (existingIngredientIndex !== -1) {
+        const updatedIngredient = { ...apiResponse[existingIngredientIndex], ...newIngredient };
+        const updatedIngredientsArray = [updatedIngredient];
+
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/ingredientsAPI/update", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(updatedIngredientsArray)
+        })
+        .then(res => res.text())
+        .then(data => {
+            callAPI();
+            togglePopup();
+            toggleConfirmationPopup();
+            setMessage(`Ingredient: ${newIngredient.ingredient_name} has been successfully added.`);
+        })
+        .catch(err => console.error(err));
+    } else {
+        console.log(newIngredient)
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/ingredientsAPI/add", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(newIngredient)
+        })
+        .then(res => res.text())
+        .then(data => {
+            callAPI();
+            togglePopup();
+            toggleConfirmationPopup();
+            setMessage(`Ingredient: ${newIngredient.ingredient_name} has been successfully added.`);
+        })
+        .catch(err => console.error(err));
+    }
+
+   setNewIngredient ({
+        ingredient_name: "",
+        quantity: "",
+        quantity_warning: "",
+        storage_location: "",
+        unit: "",
+        vegetarian: false,
+        glutenfree: false,
+        customizable: false
+    });
+};
+
+    /**
+     * Handles submitting changes to an existing ingredient.
+     * @method handleSubmit
+     */
+    const handleSubmit = () => {
+        console.log(editedIngredient);
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/ingredientsAPI/update", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(editedIngredient)
+        })
+            .then(res => res.text())
+            .then(data => {
+                callAPI();
+                toggleEditPopup();
+                setMessage(`Ingredient: ${editedIngredient.ingredient_name} has been successfully edited.`);
+                toggleConfirmationPopup();
+            })
+            .catch(err => console.error(err));
+    };
+
+    /**
+     * Handles deleting an existing ingredient.
+     * @method handleIngredientDelete
+     */
+    const handleIngredientDelete = () => {
+        if (!selectedIngredient) return;
+
+        setMessage(`Ingredient: ${selectedIngredient} has been successfully added.`);
+
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/ingredientsAPI/delete", {
+            method: "put",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ ingredient_name: selectedIngredient })
+        })
+            .then(res => res.text())
+            .then(data => {
+                callAPI();
+                toggleEditPopup();
+                toggleConfirmationPopup();
+            })
+            .catch(err => console.error(err));
+    };
+
+    /**
+     * Handles creating a new order with a specific ingredient.
+     * @param {Object} ingredient - The ingredient object for which a new order is to be created
+     * @method handleCreateNewOrderWithIngredient
+     */
+
+    const handleCreateNewOrderWithIngredient = (ingredient) => {
+        const quantityDifference = parseInt(ingredient.quantity_warning) - parseInt(ingredient.quantity);
+        navigate(`/suppliers/${ingredient.ingredient_name}/${quantityDifference}`);
+    };
+
+    const penTextSize = localStorage.getItem('textsize');
+    document.documentElement.style.setProperty('--text-size', penTextSize);
+    const penTextWeight = localStorage.getItem('boldtext');
+    document.documentElement.style.setProperty('--bold-text', penTextWeight);
+    return (
+        &lt;div className="App" style={{fontSize:(localStorage.getItem('textsize')*16), fontWeight: localStorage.getItem('boldtext'), filter: `invert(${localStorage.getItem('colorinv')})`}}>
+            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/settings">
+                &lt;button id="settingsbutton">Settings&lt;/button>
+            &lt;/a>
+            &lt;button id = "refreshbutton" onClick={callAPI}>Refresh&lt;/button>
+            &lt;header className="Ingredient-header">
+                &lt;h1 className="Ingredient-title">Ingredients&lt;/h1>
+            &lt;/header>
+            &lt;div className="navigation-buttons">
+                            {/* Navigation Buttons */}
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/Ingredients">&lt;button id = "selected">Inventory&lt;/button> &lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/Trends">&lt;button>Trends&lt;/button> &lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/Suppliers">&lt;button>Supplier Order&lt;/button> &lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/MenuManager">&lt;button>Edit Menu&lt;/button> &lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/employees"> &lt;button >Employee List&lt;/button>&lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/OrderDisplays"> &lt;button >Previous Orders&lt;/button>&lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/kitchen"> &lt;button >Kitchen&lt;/button>&lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/managerOrders"> &lt;button >Order&lt;/button>&lt;/a>
+                        &lt;/div>
+            
+            &lt;div>
+                &lt;button onClick={togglePopup}>Add Ingredient&lt;/button>
+            &lt;/div>
+            &lt;h2>Ingredient List&lt;/h2>
+            &lt;div className="ingredient-grid">
+                {apiResponse
+                    .filter(ingredient => ingredient.quantity > 0)
+                    .sort((a, b) => a.ingredient_name.localeCompare(b.ingredient_name)) // Sort alphabetically
+                    .map(ingredient => (
+                        &lt;div key={ingredient.ingredient_name} className="ingredient-item">
+                            &lt;button onClick={() => handleEditButtonClick(ingredient)}>
+                                &lt;div>{ingredient.ingredient_name}&lt;/div>
+                                &lt;div>Quantity: {ingredient.quantity}&lt;/div>
+                            &lt;/button>
+                            {ingredient.quantity &lt; ingredient.quantity_warning &amp;&amp; (
+                                &lt;button onClick={() => handleCreateNewOrderWithIngredient(ingredient)} className="warning-button">
+                                    &lt;div>Low Quantity&lt;/div>
+                                    &lt;div>Click to Order More&lt;/div>
+                                &lt;/button>
+                            )}
+                        &lt;/div>
+                    ))}
+            &lt;/div>
+            {isPopupOpen &amp;&amp; (
+                &lt;AddIngredientPopup
+                    onClose={togglePopup}
+                    onAddIngredient={handleAddIngredient}
+                    newIngredient={newIngredient}
+                    onChange={handleInputChange}
+                />
+            )}
+            {isEditPopupOpen &amp;&amp; (
+                &lt;EditIngredientPopup
+                    onClose={toggleEditPopup}
+                    onSubmit={handleSubmit}
+                    onDelete={handleIngredientDelete}
+                    ingredient={editedIngredient}
+                    onInputChange={handleExistingInputChange}
+                />
+            )}
+            {isConfirmationPopupOpen &amp;&amp; (
+                &lt;ConfirmationPopup onClose={toggleConfirmationPopup} message={message} />
+            )}
+            &lt;div id="google_translate_element">&lt;/div>
+        &lt;/div>
+    );
+};
+
+export default Ingredients;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-AddEmployeePopup.html">AddEmployeePopup</a></li><li><a href="module-App.html">App</a></li><li><a href="module-ConfirmationPopup.html">ConfirmationPopup</a></li><li><a href="module-CustomerOrdersAPI.html">CustomerOrdersAPI</a></li><li><a href="module-DisplayOrder.html">DisplayOrder</a></li><li><a href="module-EditEmployeePopup.html">EditEmployeePopup</a></li><li><a href="module-EditIngredientPopup.html">EditIngredientPopup</a></li><li><a href="module-EmployeesRouter.html">EmployeesRouter</a></li><li><a href="module-Ingredients.html">Ingredients</a></li><li><a href="module-IngredientsRouter.html">IngredientsRouter</a></li><li><a href="module-MenuItemIngredientsRouter.html">MenuItemIngredientsRouter</a></li><li><a href="module-MenuItemsAPI.html">MenuItemsAPI</a></li><li><a href="module-SupplierOrderRouter.html">SupplierOrderRouter</a></li><li><a href="module-Suppliers.html">Suppliers</a></li><li><a href="module-Trends.html">Trends</a></li><li><a href="module-TrendsAPI.html">TrendsAPI</a></li><li><a href="module-landingAPI.html">landingAPI</a></li></ul><h3>Classes</h3><ul><li><a href="AddIngredientPopup.html">AddIngredientPopup</a></li><li><a href="AddMenuItemPopup.html">AddMenuItemPopup</a></li><li><a href="CashierOrders.html">CashierOrders</a></li><li><a href="CashierSubmit.html">CashierSubmit</a></li><li><a href="CustomerOrders.html">CustomerOrders</a></li><li><a href="CustomerSubmit.html">CustomerSubmit</a></li><li><a href="EditMenuItemPopup.html">EditMenuItemPopup</a></li><li><a href="Employees.html">Employees</a></li><li><a href="HandleOAuth.html">HandleOAuth</a></li><li><a href="Kitchen.html">Kitchen</a></li><li><a href="Landing.html">Landing</a></li><li><a href="ManagerOrders.html">ManagerOrders</a></li><li><a href="ManagerSubmit.html">ManagerSubmit</a></li><li><a href="MenuBoard.html">MenuBoard</a></li><li><a href="MenuBoard2.html">MenuBoard2</a></li><li><a href="MenuBoardImages.html">MenuBoardImages</a></li><li><a href="MenuItemPopUp.html">MenuItemPopUp</a></li><li><a href="MenuManager.html">MenuManager</a></li><li><a href="NewSupplierOrderForm.html">NewSupplierOrderForm</a></li><li><a href="OrderCompletePopUp.html">OrderCompletePopUp</a></li><li><a href="OrderDisplays.html">OrderDisplays</a></li><li><a href="RegularKitchen.html">RegularKitchen</a></li><li><a href="Settings.html">Settings</a></li><li><a href="SupplierOrderDetailsPopUp.html">SupplierOrderDetailsPopUp</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed May 01 2024 01:21:47 GMT-0500 (Central Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

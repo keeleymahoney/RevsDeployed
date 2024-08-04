@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/NewSupplierOrderPopup.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/NewSupplierOrderPopup.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { Component } from "react";
+import "./AddIngredientPopUp.css";
+
+/**
+ * Class component for a form to create a new supplier order.
+ * @component
+ */
+class NewSupplierOrderForm extends Component {
+    /**
+     * Constructor for NewSupplierOrderForm component.
+     * @constructor
+     * @param {Object} props - The props passed to the component.
+     */
+    constructor(props) {
+        super(props);
+        this.state = {
+            popupPosition: { top: 0}
+        };
+    }
+
+    /**
+     * Lifecycle method called after the component has been mounted.
+     */
+    componentDidMount() {
+        this.setState({popupPosition: {top: window.scrollY}})
+        
+    }
+
+    /**
+     * Event handler for adding an ingredient to the order.
+     */
+    handleAddIngredient = () => {
+        const { selectedIngredient } = this.props;
+        if (selectedIngredient) {
+            const ingredient = {
+                name: selectedIngredient,
+                quantityOrdered: 0,
+                quantityReceived: 0,
+                wholesalePrice: 0.5
+            };
+            this.props.addIngredientToOrder(ingredient);
+        }
+    };
+
+    /**
+     * Event handler for submitting the order.
+     */
+    handleSubmitOrder = () => {
+        // Get today's date
+        const today = new Date();
+
+        // Format the date as MM-DD-YYYY
+        const orderDate = today.toLocaleDateString('en-US', {
+            month: '2-digit',
+            day: '2-digit',
+            year: 'numeric'
+        });
+        
+        // Format the time as HH:MM:SS
+        const orderTime = today.toLocaleTimeString('en-US', {
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    
+        // Submit the order
+        this.props.submitOrder(orderTime, orderDate);
+        // Close the form
+        this.props.onClose();
+    };
+
+    /**
+     * Renders the list of added ingredients.
+     * @returns {JSX.Element} - The JSX element representing the table of added ingredients.
+     */
+    renderAddedIngredients() {
+        const { currentOrderIngredients, handleQuantityChange, handleDeleteIngredient } = this.props;
+
+    
+        return (
+            &lt;table>
+                &lt;thead>
+                    &lt;tr>
+                        &lt;th>Ingredient&lt;/th>
+                        &lt;th>Quantity Ordered&lt;/th>
+                        &lt;th>Actions&lt;/th>
+                    &lt;/tr>
+                &lt;/thead>
+                &lt;tbody>
+                    {currentOrderIngredients.map(ingredient => (
+                        &lt;tr key={ingredient.name}>
+                            &lt;td>{ingredient.name}&lt;/td>
+                            &lt;td>
+                                &lt;input
+                                    type="number"
+                                    value={ingredient.quantityOrdered}
+                                    min="1"
+                                    onChange={(e) => handleQuantityChange(ingredient.name, e.target.value)}
+                                />
+                            &lt;/td>
+                            &lt;td>
+                                &lt;button onClick={() => handleDeleteIngredient(ingredient.name)}>X&lt;/button>
+                            &lt;/td>
+                        &lt;/tr>
+                    ))}
+                &lt;/tbody>
+            &lt;/table>
+        );
+    }
+
+    /**
+     * Renders the NewSupplierOrderForm component.
+     * @returns {JSX.Element} - The JSX element representing the NewSupplierOrderForm component.
+     */
+    render() {
+        const { onClose, ingredientsAvail, currentOrderIngredients, selectedIngredient, handleIngredientChange, supplierName, orderNumber, handleSupplierNameChange, handleOrderNumberChange } = this.props;
+    
+        // Filter out ingredients available that are not in the current order
+        const availableIngredients = ingredientsAvail.filter(ingredient => (
+            !currentOrderIngredients.some(orderIngredient => orderIngredient.ingredient_name === ingredient.ingredient_name)
+        ));
+    
+        return (
+            &lt;div className="popup-overlay" /*style={{fontSize:(localStorage.getItem('textsize')*16), fontWeight: localStorage.getItem('boldtext'), filter: `invert(${localStorage.getItem('colorinv')})`}}*/>
+                &lt;div className="popup-content" style={{ top: this.state.popupPosition.top}}>
+                    &lt;h2>New Supplier Order&lt;/h2>
+                    &lt;div className="category-price-container">
+                    &lt;h3>Supplier Name: &lt;/h3>
+                &lt;input
+                        type="text"
+                        value={supplierName}
+                        onChange={handleSupplierNameChange}
+                        placeholder="Supplier Name"
+                    />
+                    &lt;/div>
+                    {/* Order number input */}
+                    &lt;div className="category-price-container">
+                    &lt;h3>Order Number: &lt;/h3>
+                    &lt;input
+                        type="number"
+                        value={orderNumber}
+                        onChange={handleOrderNumberChange}
+                    />
+                    &lt;/div>
+
+                    &lt;div className="low-quantity-warning">
+                    &lt;h3 style={{ color: 'red' }}>Ingredients with Low Quanties:&lt;/h3>
+                    {ingredientsAvail.filter(ingredient => ingredient.quantity &lt; ingredient.quantity_warning).map((ingredient, index) => (
+                        &lt;p key={index}>
+                            &lt;strong>Name:&lt;/strong> {ingredient.ingredient_name} &amp;nbsp;   
+                            &lt;strong>   Quantity:&lt;/strong> {ingredient.quantity}&amp;nbsp;
+                            &lt;strong>   Min-Quantity:  &lt;/strong> {ingredient.quantity_warning}
+                        &lt;/p>
+                    ))}
+                &lt;/div>
+                    {/* Ingredient selection */}
+                    &lt;h3>Ingredients&lt;/h3>
+                    {this.renderAddedIngredients()}
+                    &lt;div className="add-ingredient-container">
+                    &lt;select onChange={handleIngredientChange} value={selectedIngredient}>
+                        &lt;option value="">Select an Ingredient&lt;/option>
+                        {availableIngredients.map((ingredient, index) => (
+                            &lt;option key={index} value={ingredient.ingredient_name}>
+                                {ingredient.ingredient_name}
+                            &lt;/option>
+                        ))}
+                    &lt;/select>
+                    {/* Submit button */}
+                    &lt;button onClick={this.handleAddIngredient}>Add Ingredient to Order&lt;/button>
+                    &lt;/div>
+                    &lt;button onClick={this.handleSubmitOrder}>Submit Order&lt;/button>
+                    {/* Close button */}
+                    &lt;button onClick={onClose}>Close&lt;/button>
+                &lt;/div>
+            &lt;/div>
+        );
+    }
+}
+
+export default NewSupplierOrderForm;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-AddEmployeePopup.html">AddEmployeePopup</a></li><li><a href="module-App.html">App</a></li><li><a href="module-ConfirmationPopup.html">ConfirmationPopup</a></li><li><a href="module-CustomerOrdersAPI.html">CustomerOrdersAPI</a></li><li><a href="module-DisplayOrder.html">DisplayOrder</a></li><li><a href="module-EditEmployeePopup.html">EditEmployeePopup</a></li><li><a href="module-EditIngredientPopup.html">EditIngredientPopup</a></li><li><a href="module-EmployeesRouter.html">EmployeesRouter</a></li><li><a href="module-Ingredients.html">Ingredients</a></li><li><a href="module-IngredientsRouter.html">IngredientsRouter</a></li><li><a href="module-MenuItemIngredientsRouter.html">MenuItemIngredientsRouter</a></li><li><a href="module-MenuItemsAPI.html">MenuItemsAPI</a></li><li><a href="module-SupplierOrderRouter.html">SupplierOrderRouter</a></li><li><a href="module-Suppliers.html">Suppliers</a></li><li><a href="module-Trends.html">Trends</a></li><li><a href="module-TrendsAPI.html">TrendsAPI</a></li><li><a href="module-landingAPI.html">landingAPI</a></li></ul><h3>Classes</h3><ul><li><a href="AddIngredientPopup.html">AddIngredientPopup</a></li><li><a href="AddMenuItemPopup.html">AddMenuItemPopup</a></li><li><a href="CashierOrders.html">CashierOrders</a></li><li><a href="CashierSubmit.html">CashierSubmit</a></li><li><a href="CustomerOrders.html">CustomerOrders</a></li><li><a href="CustomerSubmit.html">CustomerSubmit</a></li><li><a href="EditMenuItemPopup.html">EditMenuItemPopup</a></li><li><a href="Employees.html">Employees</a></li><li><a href="HandleOAuth.html">HandleOAuth</a></li><li><a href="Kitchen.html">Kitchen</a></li><li><a href="Landing.html">Landing</a></li><li><a href="ManagerOrders.html">ManagerOrders</a></li><li><a href="ManagerSubmit.html">ManagerSubmit</a></li><li><a href="MenuBoard.html">MenuBoard</a></li><li><a href="MenuBoard2.html">MenuBoard2</a></li><li><a href="MenuBoardImages.html">MenuBoardImages</a></li><li><a href="MenuItemPopUp.html">MenuItemPopUp</a></li><li><a href="MenuManager.html">MenuManager</a></li><li><a href="NewSupplierOrderForm.html">NewSupplierOrderForm</a></li><li><a href="OrderCompletePopUp.html">OrderCompletePopUp</a></li><li><a href="OrderDisplays.html">OrderDisplays</a></li><li><a href="RegularKitchen.html">RegularKitchen</a></li><li><a href="Settings.html">Settings</a></li><li><a href="SupplierOrderDetailsPopUp.html">SupplierOrderDetailsPopUp</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed May 01 2024 01:21:47 GMT-0500 (Central Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

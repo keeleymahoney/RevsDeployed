@@ -1,0 +1,54 @@
+:root {
+  --text-size: 1; /* Default text size */
+  --bold-text: normal;
+}
+
+.Landing-header {
+  transform: translateY(50%);
+}
+
+#Landing {
+  background-color: #decece;
+}
+
+.Landing-title {
+  font-size: 3em;
+  margin-top: 20px;
+  font-weight: bold;
+  background: radial-gradient(#800000, #decece);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+#beginbutton {
+    background-color: #800000;
+    border: none;
+    color: white;
+    padding: 30px 64px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+  
+  }
+  
+#settingsbutton:hover{
+  background-color: #f8ba4c;
+}
+
+#settingsbutton {
+  background-color: white;
+  border: none;
+  color: black;
+  position:fixed;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: calc(1rem * var(--text-size));
+  font-weight: calc(var(--bold-text));
+  right:10px;
+  z-index: 1000;
+  width:auto;
+}

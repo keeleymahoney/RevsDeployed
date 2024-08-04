@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/Settings.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/Settings.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { Component } from "react";
+import "./App.css";
+import "./Settings.css";
+
+/**
+ * @author Brandon Cisneros
+ * Component for Settings screen
+ */
+class Settings extends Component {
+    /**
+     * Constructs a new instance of the settings screen component
+     * 
+     * @param {object} props The properties passed to the component.
+     */
+    constructor(props) {
+        super(props);
+        this.state = { 
+            apiResponse: [],
+            employeeId: "",
+            password: "",
+            isGoogleTranslateInitialized: false
+};
+        this.setTextSize = this.setTextSize.bind(this);
+        this.toggleBoldText = this.toggleBoldText.bind(this);
+    }
+
+    /**
+     * Calls API to retrieve employee information
+     */
+    callAPI() {
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/employeesAPI")
+            .then(res => res.json())
+            .then(res => this.setState({ apiResponse: res }))
+            .catch(err => err);
+    }
+
+    /**
+     * Executes when the component is mounted.
+     * Calls methods to fetch employee data and initialize Google Translate.
+     * This lifecycle method is invoked immediately after a component is mounted.
+     */
+    componentDidMount() {
+        this.callAPI();
+        if (!this.state.isGoogleTranslateInitialized) {
+            this.initializeGoogleTranslate();
+            this.setState({ isGoogleTranslateInitialized: true });
+        }
+    }
+
+    /**
+     * Initializes Google Translate API if not already initialized.
+     * Adds a script tag to the document body to load the necessary Google Translate script asynchronously.
+     * Sets up the callback function to initialize Google Translate when the script is loaded.
+     */
+    initializeGoogleTranslate() {
+        if (!window.googleTranslateElementInit) {
+            const script = document.createElement("script");
+            script.type = "text/javascript";
+            script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+            script.async = true;
+            document.body.appendChild(script);
+            window.googleTranslateElementInit = this.googleTranslateElementInit.bind(this);
+        }
+    }
+
+    /**
+     * Callback function to initialize Google Translate once the script is loaded.
+     * Creates a new Google Translate element with English as the page language.
+     * @param {string} id - The id of the HTML element where the translation widget should be placed.
+     */
+    googleTranslateElementInit() {
+        new window.google.translate.TranslateElement({ pageLanguage: "en" }, "google_translate_element");
+    }
+
+
+    /**
+    * Sets text size settings and rerenders
+    * @param {decimal} size Relative size desired from 1 to 2
+    */
+    setTextSize = (size) => {
+        localStorage.setItem('textsize', size);
+        this.forceUpdate();
+        // console.log("changed size to " + size);
+    }
+
+    /**
+    * Toggles bold text settings and rerenders
+    */
+    toggleBoldText = () => {
+        if (localStorage.getItem('boldtext') == 'normal') {
+            localStorage.setItem('boldtext', 'bold');
+        }
+        else {
+            localStorage.setItem('boldtext', 'normal');
+        }
+        this.forceUpdate();
+    }
+
+    /**
+    * Toggles color inversion setting and rerenders
+    */
+    invertColor = () => {
+        if (localStorage.getItem('colorinv') == 1) {
+            localStorage.setItem('colorinv', 0);
+        }
+        else {
+            localStorage.setItem('colorinv', 1);
+        }
+        this.forceUpdate();
+    }
+
+
+    /**
+     * Attempts traditional login, routing to a page if the user matches expected values
+     */
+    attemptLogin = () => {
+        const { employeeId, password, apiResponse } = this.state;
+        if (!apiResponse || !Array.isArray(apiResponse)) {
+            return null; // Or handle the case when the array is not present or not valid
+        }
+        const userMatch = apiResponse.find(user => user.employee_id == employeeId &amp;&amp; user.pswd == password);
+        console.log(userMatch);
+        if (userMatch) {
+            // Redirect to a different page if login is successful
+            if (userMatch.manager) {
+                window.location.href = "https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/ingredients";
+            }
+            else if (userMatch.employee_name == "KITCHEN") {
+                window.location.href = "https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/RegularKitchen";
+            }
+            else if (userMatch.employee_name == "MENUBOARD") {
+                window.location.href = "https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/menuBoard";
+            }
+            else {
+                window.location.href = "https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/cashierOrders";
+            }
+        } else {
+            // Display a login error message
+            alert('Login Error: Invalid employee ID or password');
+        }
+
+    }
+
+    /**
+     * Routes user to HandleOAuth to attempt Google Login
+     */
+    attemptGoogleLogin = () => {
+        localStorage.setItem('oauth2-test-params', '{}');
+        window.location.href = "https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/handleOAuth"
+    }
+
+    /**
+     * Routes user to Landing Page and clears OAuth login
+     */
+    exitLogout = () => {
+        localStorage.setItem('oauth2-test-params', '{}');
+        window.location.href = "https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/"
+    }
+
+    /**
+     * Changes state values of monitored event
+     * @param {*} event Event to be handled
+     */
+    handleInputChange = (event) => {
+        const { name, value } = event.target;
+        this.setState({ [name]: value });
+    }
+
+    /**
+     * Renders the settings screen component.
+     * @returns {JSX.Element} The JSX element representing the settings screen.
+     */
+    render() {
+        const penTextSize = localStorage.getItem('textsize');
+        document.documentElement.style.setProperty('--text-size', penTextSize);
+        const penTextWeight = localStorage.getItem('boldtext');
+        document.documentElement.style.setProperty('--bold-text', penTextWeight);
+        const x1Selected = (localStorage.getItem('textsize') == 1) ? 'selected' : '';
+        const x15Selected = (localStorage.getItem('textsize') == 1.5) ? 'selected' : '';
+        const x175Selected = (localStorage.getItem('textsize') == 1.75) ? 'selected' : '';
+        const x2Selected = (localStorage.getItem('textsize') == 2) ? 'selected' : '';
+        const boldSelected = (localStorage.getItem('boldtext') == 'bold') ? 'selected' : '';
+
+        return (
+                &lt;div className="App" style={{fontSize:(localStorage.getItem('textsize')*16), fontWeight: localStorage.getItem('boldtext'), filter: `invert(${localStorage.getItem('colorinv')})`}}>
+                    &lt;header className="Settings-header">
+                    &lt;a href="javascript:history.back()">&lt;button id="backbutton">Back&lt;/button>&lt;/a>
+                    &lt;button id="exitbutton" onClick={() => this.exitLogout()}>Exit/Logout&lt;/button>
+                    &lt;h1 className="Settings-title">Settings&lt;/h1>
+                    &lt;/header>
+                    &lt;h2>Text Customization&lt;/h2>
+                    &lt;button id={x1Selected} onClick={() => this.setTextSize(1)}>1x&lt;/button>
+                    &lt;button id={x15Selected} onClick={() => this.setTextSize(1.5)}>1.5x&lt;/button>
+                    &lt;button id={x175Selected} onClick={() => this.setTextSize(1.75)}>1.75x&lt;/button>
+                    &lt;button id={x2Selected} onClick={() => this.setTextSize(2)}>2x&lt;/button>
+                    &lt;button id={boldSelected} onClick={() => this.toggleBoldText()}>Toggle Bold Text&lt;/button>
+                    &lt;h2>Color Customization&lt;/h2>
+                    &lt;button onClick={() => this.invertColor()}>Toggle Color Inversion&lt;/button>
+                    &lt;h2>Employee Login&lt;/h2>
+                    &lt;table>
+                    &lt;tbody>
+                        &lt;tr>
+                                &lt;input
+                                    type="text"
+                                    name="employeeId"
+                                    placeholder="Employee ID"
+                                    value={this.state.employeeId}
+                                    onChange={this.handleInputChange}
+                                />
+                        &lt;/tr>
+                        &lt;tr>
+                                &lt;input
+                                    type="password"
+                                    name="password"
+                                    placeholder="Password"
+                                    value={this.state.password}
+                                    onChange={this.handleInputChange}
+                                />
+                        &lt;/tr>
+                    &lt;/tbody>
+                &lt;/table>
+                &lt;button onClick={() => this.attemptLogin()}>Login&lt;/button>
+                &lt;button onClick={() => this.attemptGoogleLogin()}>Login with Google&lt;/button>
+                &lt;div id="google_translate_element">&lt;/div>
+                &lt;/div>
+        );
+    }
+}
+
+export default Settings;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-AddEmployeePopup.html">AddEmployeePopup</a></li><li><a href="module-App.html">App</a></li><li><a href="module-ConfirmationPopup.html">ConfirmationPopup</a></li><li><a href="module-CustomerOrdersAPI.html">CustomerOrdersAPI</a></li><li><a href="module-DisplayOrder.html">DisplayOrder</a></li><li><a href="module-EditEmployeePopup.html">EditEmployeePopup</a></li><li><a href="module-EditIngredientPopup.html">EditIngredientPopup</a></li><li><a href="module-EmployeesRouter.html">EmployeesRouter</a></li><li><a href="module-Ingredients.html">Ingredients</a></li><li><a href="module-IngredientsRouter.html">IngredientsRouter</a></li><li><a href="module-MenuItemIngredientsRouter.html">MenuItemIngredientsRouter</a></li><li><a href="module-MenuItemsAPI.html">MenuItemsAPI</a></li><li><a href="module-SupplierOrderRouter.html">SupplierOrderRouter</a></li><li><a href="module-Suppliers.html">Suppliers</a></li><li><a href="module-Trends.html">Trends</a></li><li><a href="module-TrendsAPI.html">TrendsAPI</a></li><li><a href="module-landingAPI.html">landingAPI</a></li></ul><h3>Classes</h3><ul><li><a href="AddIngredientPopup.html">AddIngredientPopup</a></li><li><a href="AddMenuItemPopup.html">AddMenuItemPopup</a></li><li><a href="CashierOrders.html">CashierOrders</a></li><li><a href="CashierSubmit.html">CashierSubmit</a></li><li><a href="CustomerOrders.html">CustomerOrders</a></li><li><a href="CustomerSubmit.html">CustomerSubmit</a></li><li><a href="EditMenuItemPopup.html">EditMenuItemPopup</a></li><li><a href="Employees.html">Employees</a></li><li><a href="HandleOAuth.html">HandleOAuth</a></li><li><a href="Kitchen.html">Kitchen</a></li><li><a href="Landing.html">Landing</a></li><li><a href="ManagerOrders.html">ManagerOrders</a></li><li><a href="ManagerSubmit.html">ManagerSubmit</a></li><li><a href="MenuBoard.html">MenuBoard</a></li><li><a href="MenuBoard2.html">MenuBoard2</a></li><li><a href="MenuBoardImages.html">MenuBoardImages</a></li><li><a href="MenuItemPopUp.html">MenuItemPopUp</a></li><li><a href="MenuManager.html">MenuManager</a></li><li><a href="NewSupplierOrderForm.html">NewSupplierOrderForm</a></li><li><a href="OrderCompletePopUp.html">OrderCompletePopUp</a></li><li><a href="OrderDisplays.html">OrderDisplays</a></li><li><a href="RegularKitchen.html">RegularKitchen</a></li><li><a href="Settings.html">Settings</a></li><li><a href="SupplierOrderDetailsPopUp.html">SupplierOrderDetailsPopUp</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed May 01 2024 01:21:47 GMT-0500 (Central Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

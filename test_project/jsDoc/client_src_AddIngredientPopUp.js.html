@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/AddIngredientPopUp.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/AddIngredientPopUp.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>
+//neccesary imports
+import React, { Component } from "react";
+import "./AddIngredientPopUp.css"; // Import CSS file for styling
+
+//class for the popup
+/**
+ * Component for rendering a popup to add a new ingredient.
+ * @component
+ * @param {Object} props - The props passed to the component.
+ * @param {Function} props.onClose - Callback function to close the popup.
+ * @param {Function} props.onAddIngredient - Callback function to add a new ingredient.
+ * @param {Object} props.newIngredient - Object representing the new ingredient.
+ * @param {Function} props.onChange - Callback function to handle changes in input fields.
+ * @author Keeley Mahoney
+ * @returns {JSX.Element} - The JSX element representing the AddIngredientPopup component.
+ */
+class AddIngredientPopup extends Component {
+    /**
+     * Constructs a new AddIngredientPopup component.
+     * @constructor
+     * @param {Object} props - The props passed to the component.
+     */
+    constructor(props) {
+        super(props);
+        this.state = {
+            popupPosition: { top: 0}
+        };
+    }
+
+    /**
+     * Lifecycle method called after the component mounts.
+     * Sets the initial position of the popup relative to the viewport.
+     * @returns {void}
+     */
+    componentDidMount() {
+        this.setState({popupPosition: {top: window.scrollY}})
+    }
+
+    /**
+     * Lifecycle method called before the component unmounts.
+     * Removes the event listener for opening the popup.
+     * @returns {void}
+     */
+    componentWillUnmount() {
+        document.removeEventListener("click", this.handleOpenPopup);
+    }
+    
+    /**
+     * Renders the AddIngredientPopup component.
+     * @returns {JSX.Element} - The JSX element representing the AddIngredientPopup component.
+     */
+    render() {
+        const { onClose, onAddIngredient, newIngredient, onChange } = this.props;
+        
+
+        //html details. essentially has the label and the input for the text with buttons for close and for adding the ingredient
+        return (
+            &lt;div className="popup-overlay" /*style={{fontSize:(localStorage.getItem('textsize')*16), fontWeight: localStorage.getItem('boldtext'), filter: `invert(${localStorage.getItem('colorinv')})`}}*/>
+                &lt;div className="popup-content-menu" style={{ top: this.state.popupPosition.top}}>
+                    &lt;h2>Add New Ingredient&lt;/h2>
+                    &lt;div className="category-price-container">
+                    &lt;label>Ingredient Name:&lt;/label>
+                    &lt;input type="text" value={newIngredient.ingredient_name} onChange={(e) => onChange(e, "ingredient_name")} />
+                    &lt;/div>
+
+                    &lt;div className="category-price-container">
+                    &lt;label>Quantity:&lt;/label>
+                    &lt;input type="number" min="0" step="1" value={Math.max(0, newIngredient.quantity)} onChange={(e) => onChange(e, "quantity")} />
+                    &lt;/div>
+                    
+                    &lt;div className="category-price-container">
+                    &lt;label>Minimum Quantity:&lt;/label>
+                    &lt;input type="number" min="0" step="1" value={Math.max(0, newIngredient.quantity_warning)} onChange={(e) => onChange(e, "quantity_warning")} />
+                    &lt;/div>
+                    
+                    &lt;div className="category-price-container">
+                    &lt;label>Storage Location:&lt;/label>
+                    &lt;input type="text" value={newIngredient.storage_location} onChange={(e) => onChange(e, "storage_location")} />
+                    &lt;/div>
+                    
+                    &lt;div className="category-price-container">
+                    &lt;label>Unit:&lt;/label>
+                    &lt;input type="text" value={newIngredient.unit} onChange={(e) => onChange(e, "unit")} />
+                    &lt;/div>
+
+                    &lt;div className="category-price-container">
+                    &lt;label>Vegetarian:&lt;/label>
+                    &lt;select value={newIngredient.vegetarian} onChange={(e) => onChange(e, "vegetarian")}>
+                        &lt;option value={true}>Yes&lt;/option>
+                        &lt;option value={false}>No&lt;/option>
+                    &lt;/select>
+                    &lt;/div>
+
+                    &lt;div className="category-price-container">
+                    &lt;label>Gluten Free:&lt;/label>
+                    &lt;select value={newIngredient.glutenfree} onChange={(e) => onChange(e, "glutenfree")}>
+                        &lt;option value={true}>Yes&lt;/option>
+                        &lt;option value={false}>No&lt;/option>
+                    &lt;/select>
+                    &lt;/div>
+
+                    &lt;div className="category-price-container">
+                        &lt;label>Customizable:&lt;/label>
+                        &lt;select value={newIngredient.customizable} onChange={(e) => onChange(e, "customizable")}>
+                                &lt;option value={true}>Yes&lt;/option>
+                                &lt;option value={false}>No&lt;/option>
+                            &lt;/select>
+                            &lt;/div>
+                    &lt;button onClick={onAddIngredient}>Add Ingredient&lt;/button>
+                    &lt;button onClick={onClose}>Close&lt;/button>
+                &lt;/div>
+            &lt;/div>
+        );
+    }
+}
+
+export default AddIngredientPopup;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-AddEmployeePopup.html">AddEmployeePopup</a></li><li><a href="module-App.html">App</a></li><li><a href="module-ConfirmationPopup.html">ConfirmationPopup</a></li><li><a href="module-CustomerOrdersAPI.html">CustomerOrdersAPI</a></li><li><a href="module-DisplayOrder.html">DisplayOrder</a></li><li><a href="module-EditEmployeePopup.html">EditEmployeePopup</a></li><li><a href="module-EditIngredientPopup.html">EditIngredientPopup</a></li><li><a href="module-EmployeesRouter.html">EmployeesRouter</a></li><li><a href="module-Ingredients.html">Ingredients</a></li><li><a href="module-IngredientsRouter.html">IngredientsRouter</a></li><li><a href="module-MenuItemIngredientsRouter.html">MenuItemIngredientsRouter</a></li><li><a href="module-MenuItemsAPI.html">MenuItemsAPI</a></li><li><a href="module-SupplierOrderRouter.html">SupplierOrderRouter</a></li><li><a href="module-Suppliers.html">Suppliers</a></li><li><a href="module-Trends.html">Trends</a></li><li><a href="module-TrendsAPI.html">TrendsAPI</a></li><li><a href="module-landingAPI.html">landingAPI</a></li></ul><h3>Classes</h3><ul><li><a href="AddIngredientPopup.html">AddIngredientPopup</a></li><li><a href="AddMenuItemPopup.html">AddMenuItemPopup</a></li><li><a href="CashierOrders.html">CashierOrders</a></li><li><a href="CashierSubmit.html">CashierSubmit</a></li><li><a href="CustomerOrders.html">CustomerOrders</a></li><li><a href="CustomerSubmit.html">CustomerSubmit</a></li><li><a href="EditMenuItemPopup.html">EditMenuItemPopup</a></li><li><a href="Employees.html">Employees</a></li><li><a href="HandleOAuth.html">HandleOAuth</a></li><li><a href="Kitchen.html">Kitchen</a></li><li><a href="Landing.html">Landing</a></li><li><a href="ManagerOrders.html">ManagerOrders</a></li><li><a href="ManagerSubmit.html">ManagerSubmit</a></li><li><a href="MenuBoard.html">MenuBoard</a></li><li><a href="MenuBoard2.html">MenuBoard2</a></li><li><a href="MenuBoardImages.html">MenuBoardImages</a></li><li><a href="MenuItemPopUp.html">MenuItemPopUp</a></li><li><a href="MenuManager.html">MenuManager</a></li><li><a href="NewSupplierOrderForm.html">NewSupplierOrderForm</a></li><li><a href="OrderCompletePopUp.html">OrderCompletePopUp</a></li><li><a href="OrderDisplays.html">OrderDisplays</a></li><li><a href="RegularKitchen.html">RegularKitchen</a></li><li><a href="Settings.html">Settings</a></li><li><a href="SupplierOrderDetailsPopUp.html">SupplierOrderDetailsPopUp</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed May 01 2024 01:21:47 GMT-0500 (Central Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

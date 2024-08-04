@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/MenuBoard2.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/MenuBoard2.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { Component } from "react";
+import "./MenuBoard.css";
+import revsLogo from './revs-logo.png'
+
+//import Ingredients from './Ingredients';
+
+
+/**
+ * @author Joanne Liu
+ * MenuBoard2 component displays the menu items fetched from the server and initializes Google Translate.
+ * 
+ * It fetches entrees, sides, desserts, beverages, seasonals, and promotions data from the server.
+ */
+class MenuBoard2 extends Component {
+    /**
+     * Constructor for MenuBoard2 component.
+     * Initializes the state to hold entrees, sides, desserts, beverages, seasonals, and promotions data.
+     * Fetches data for entrees, sides, desserts, beverages, seasonals, and promotions.
+     */
+    constructor(props) {
+        super(props);
+        this.state = { 
+            entrees: [], // State to hold entrees data
+            sides: [],
+            desserts: [],
+            beverages: [], 
+            seasonals: [],
+            promotions: []
+        };
+        this.fetchDessertsData();
+    }
+    
+    /**
+     * Lifecycle method invoked after the component is mounted.
+     * Initializes Google Translate.
+     */
+    componentDidMount() {
+        this.initializeGoogleTranslate();
+    }
+
+    /**
+     * Initializes Google Translate script if not already loaded.
+     */
+    initializeGoogleTranslate() {
+        if (!window.googleTranslateElementInit) {
+            const script = document.createElement("script");
+            script.type = "text/javascript";
+            script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+            script.async = true;
+            document.body.appendChild(script);
+            window.googleTranslateElementInit = this.googleTranslateElementInit.bind(this);
+        }
+    }
+
+    /**
+     * Initializes the Google Translate element.
+     */
+    googleTranslateElementInit() {
+        new window.google.translate.TranslateElement({ pageLanguage: "en" }, "google_translate_element");
+    }
+
+    /**
+     * Fetches desserts data from the server.
+     */
+    fetchDessertsData() {
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/menuItemsAPI/desserts")
+            .then(res => res.json())
+            .then(res => this.setState({ desserts: res}))
+            .catch(err => console.error(err));
+    }
+
+    /**
+     * Renders dessert menu items.
+     * @returns {JSX.Element[]} Array of JSX elements representing dessert menu items.
+     */
+    renderDesserts() {
+        const { desserts } = this.state;
+        return desserts.map(item => ( item.price > 0 &amp;&amp; 
+            &lt;tr key={item.item_name}>
+                &lt;div className = "menu-item-box">
+                    &lt;div className = "header-row">
+                        &lt;span>{item.item_name} &lt;/span> | {item.price} &amp;emsp; 
+                        {item.vegetarian &amp;&amp; 'V'} &amp;nbsp;&amp;nbsp; {item.glutenfree &amp;&amp; 'GF'}
+                    &lt;/div>
+                    &lt;p>&amp;nbsp;&amp;nbsp; {item.descript}&lt;/p>
+                &lt;/div>
+            &lt;/tr>
+        ));
+    }
+
+    /**
+     * Renders the MenuBoard component with information for desserts
+     * @returns {JSX.Element} JSX Element representing the MenuBoard2 component.
+     */
+    render() {
+        const penTextSize = localStorage.getItem('textsize');
+        document.documentElement.style.setProperty('--text-size', penTextSize);
+        const penTextWeight = localStorage.getItem('boldtext');
+        document.documentElement.style.setProperty('--bold-text', penTextWeight);
+        return (
+            &lt;div style={{fontSize:(localStorage.getItem('textsize')*16), fontWeight: localStorage.getItem('boldtext'), filter: `invert(${localStorage.getItem('colorinv')})`}}>
+            &lt;header className = "menuboard-header">
+                &lt;div className = "header-content">
+                    &lt;img src={revsLogo} alt="Rev's American Grill Logo" className = "left-logo"/>
+                    &lt;div className = "middle-text">
+                        &lt;h1 className = "header">Desserts&lt;/h1>
+                    &lt;/div>
+                &lt;/div>
+            &lt;/header>
+                &lt;div className = "menuboard-container">
+                &lt;div className = "left-column">
+                        &lt;div className = "category-box-columns">
+                            &lt;div className = "category-box">
+                                {this.renderDesserts()}
+                            &lt;/div>
+                        &lt;/div>
+                    &lt;/div>
+                &lt;/div>
+                &lt;div id="google_translate_element">&lt;/div>
+            &lt;/div>
+        );
+    }
+}
+
+export default MenuBoard2;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-AddEmployeePopup.html">AddEmployeePopup</a></li><li><a href="module-App.html">App</a></li><li><a href="module-ConfirmationPopup.html">ConfirmationPopup</a></li><li><a href="module-CustomerOrdersAPI.html">CustomerOrdersAPI</a></li><li><a href="module-DisplayOrder.html">DisplayOrder</a></li><li><a href="module-EditEmployeePopup.html">EditEmployeePopup</a></li><li><a href="module-EditIngredientPopup.html">EditIngredientPopup</a></li><li><a href="module-EmployeesRouter.html">EmployeesRouter</a></li><li><a href="module-Ingredients.html">Ingredients</a></li><li><a href="module-IngredientsRouter.html">IngredientsRouter</a></li><li><a href="module-MenuItemIngredientsRouter.html">MenuItemIngredientsRouter</a></li><li><a href="module-MenuItemsAPI.html">MenuItemsAPI</a></li><li><a href="module-SupplierOrderRouter.html">SupplierOrderRouter</a></li><li><a href="module-Suppliers.html">Suppliers</a></li><li><a href="module-Trends.html">Trends</a></li><li><a href="module-TrendsAPI.html">TrendsAPI</a></li><li><a href="module-landingAPI.html">landingAPI</a></li></ul><h3>Classes</h3><ul><li><a href="AddIngredientPopup.html">AddIngredientPopup</a></li><li><a href="AddMenuItemPopup.html">AddMenuItemPopup</a></li><li><a href="CashierOrders.html">CashierOrders</a></li><li><a href="CashierSubmit.html">CashierSubmit</a></li><li><a href="CustomerOrders.html">CustomerOrders</a></li><li><a href="CustomerSubmit.html">CustomerSubmit</a></li><li><a href="EditMenuItemPopup.html">EditMenuItemPopup</a></li><li><a href="Employees.html">Employees</a></li><li><a href="HandleOAuth.html">HandleOAuth</a></li><li><a href="Kitchen.html">Kitchen</a></li><li><a href="Landing.html">Landing</a></li><li><a href="ManagerOrders.html">ManagerOrders</a></li><li><a href="ManagerSubmit.html">ManagerSubmit</a></li><li><a href="MenuBoard.html">MenuBoard</a></li><li><a href="MenuBoard2.html">MenuBoard2</a></li><li><a href="MenuBoardImages.html">MenuBoardImages</a></li><li><a href="MenuItemPopUp.html">MenuItemPopUp</a></li><li><a href="MenuManager.html">MenuManager</a></li><li><a href="NewSupplierOrderForm.html">NewSupplierOrderForm</a></li><li><a href="OrderCompletePopUp.html">OrderCompletePopUp</a></li><li><a href="OrderDisplays.html">OrderDisplays</a></li><li><a href="RegularKitchen.html">RegularKitchen</a></li><li><a href="Settings.html">Settings</a></li><li><a href="SupplierOrderDetailsPopUp.html">SupplierOrderDetailsPopUp</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed May 01 2024 01:21:47 GMT-0500 (Central Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

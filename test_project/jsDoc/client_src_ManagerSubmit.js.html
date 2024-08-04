@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/ManagerSubmit.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/ManagerSubmit.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { Component } from "react";
+import { Link, Navigate } from 'react-router-dom';
+import "./App.css";
+import OrderCompletePopUp from "./OrderCompletePopUp";
+
+/**
+ * @author Joanne Liu
+ * Component for customer order submission on manager view.
+ */
+class ManagerSubmit extends Component {
+
+    /**
+    * Constructs a new ManagerSubmit component.
+    * 
+    * @param {Object} props - The props passed to the ManagerSubmit component.
+    */
+    constructor(props) {
+        super(props);
+        this.state = {
+            menuData: {},
+            selectedItems: {},
+            ingredientData: {},
+            total: 0,
+            orderNumInput: [],
+            isConfirmationOpen: false,
+            notes: "",
+            totalIngredients: {},
+            errorQuantity: false,
+        };
+        this.orderNum = 0;
+        this.fetchOrderNum();
+        this.fetchMenuData();
+    }
+
+    /**
+     * Executes when the component is mounted.
+     * Calls methods to fetch ingredient data, fetch saved data, and initialize Google Translate.
+     * This lifecycle method is invoked immediately after a component is mounted.
+     */
+    componentDidMount() {
+        this.fetchIngredientData();
+        this.fetchSavedData();
+        this.initializeGoogleTranslate();
+    }
+
+    /**
+     * Initializes Google Translate.
+     */
+    initializeGoogleTranslate() {
+        if (!window.googleTranslateElementInit) {
+            const script = document.createElement("script");
+            script.type = "text/javascript";
+            script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+            script.async = true;
+            document.body.appendChild(script);
+            window.googleTranslateElementInit = this.googleTranslateElementInit.bind(this);
+        }
+    }
+
+    /**
+     * Initializes Google Translate element.
+     */
+    googleTranslateElementInit() {
+        new window.google.translate.TranslateElement({ pageLanguage: "en" }, "google_translate_element");
+    }
+
+    /**
+     * Fetches the latest order number from the server.
+     */
+    fetchOrderNum() {
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/customerOrdersAPI/orderNum")
+        // fetch("http://localhost:9000/customerOrdersAPI/orderNum") 
+            .then(res => res.json())
+            .then(res => this.setState({ orderNumInput: res }))            
+            .catch(err => console.error(err));
+    }
+
+    /**
+     * Fetches saved data from the server.
+     */
+    fetchSavedData() {
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/customerOrdersAPI/savedData")
+        // fetch("http://localhost:9000/customerOrdersAPI/savedData") 
+            .then(res => res.json())
+            .then(res => {
+                if (res &amp;&amp; Object.keys(res).length > 0) {
+                    this.setState({ selectedItems: res }, this.calculateTotal);
+                } else {
+                    this.setState({ selectedItems: {} });
+                }
+            })          
+            .catch(err => console.error(err));
+    }
+
+    /**
+     * Fetches menu data from the server.
+     */
+    fetchMenuData() {
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/menuItemsAPI") 
+        // fetch("http://localhost:9000/menuItemsAPI") 
+            .then(res => res.json())
+            .then(res => {
+                const menuDataMap = {};
+                res.forEach(item => {
+                    menuDataMap[item.item_name] = {price: item.price, descript: item.descript, picture: item.picture, veg: item.vegetarian, gf: item.glutenfree} ;
+                });
+                this.setState({ menuData: menuDataMap });
+            })
+            .catch(err => console.error(err));
+    }
+
+    /**
+     * Fetches ingredient data from the server.
+     */
+    fetchIngredientData() {
+        // console.log("in locations");
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/customerOrdersAPI/ingredientData")
+        // fetch("http://localhost:9000/customerOrdersAPI/ingredientData") 
+            .then(res => res.json())
+            .then(res => {
+                const ingredientMap = {};
+                res.forEach(item => {
+                    ingredientMap[item.ingredient_name] = {location: item.storage_location, custom: item.customizable} ;
+                });
+                this.setState({ ingredientData: ingredientMap });
+                // console.log(ingredientMap);
+            })
+            .catch(err => console.error(err));
+    }
+
+    /**
+     * Calculates the total price of selected items.
+     */
+    calculateTotal() {
+        const { selectedItems } = this.state;
+        let total = 0;
+        Object.values(selectedItems).forEach(selectedItem => {
+            total += selectedItem.quantity * selectedItem.price;
+        });
+        this.setState({ total });
+    }
+
+    /**
+     * Toggles the confirmation pop-up state.
+     */
+    toggleConfirmationPopUp = () => {
+        this.setState(prevState => ({ isConfirmationOpen: !prevState.isConfirmationOpen }));
+    };
+
+    /**
+     * Reloads the page after handling back action.
+     */
+    reloadPage = () => {
+        this.handleBack();
+        this.setState({selectedItems: {}, total: 0, isConfirmationOpen: false, submitted: true});
+    };
+
+     /**
+     * Handles changes in the quantity of a selected item.
+     * 
+     * @param {string} itemName - The name of the item whose quantity is changing.
+     * @param {string} type - The type of change ('increase' or 'decrease').
+     */
+    handleQuantityChange(itemName, type) {
+        const { selectedItems } = this.state;
+        const updatedItems = { ...selectedItems };
+        switch (type) {
+            case 'increase':
+                // make deep copy of first instance
+                const newItemIngredients = updatedItems[itemName].ingredients[0].map(ingredient => ({ ...ingredient }));
+                updatedItems[itemName].ingredients.push(newItemIngredients);
+                updatedItems[itemName].quantity++;
+                break;
+            case 'decrease':
+                if (updatedItems[itemName].quantity > 1) {
+                    updatedItems[itemName].ingredients.pop();
+                    updatedItems[itemName].quantity--;
+                } else {
+                    // remove item if quantity &lt; 1
+                    delete updatedItems[itemName];
+                }
+                break;
+            default:
+                break;
+        }
+        this.setState({ selectedItems: updatedItems }, this.calculateTotal);
+    }
+
+    /**
+    * Handles changes in the quantity of an ingredient of a selected item.
+    * 
+    * @param {string} itemName - The name of the item whose ingredient quantity is changing.
+    * @param {number} index - The index of the ingredient list.
+    * @param {string} ingredientName - The name of the ingredient whose quantity is changing.
+    * @param {string} type - The type of change ('increase' or 'decrease').
+    */
+    handleIngredientQuantityChange(itemName, index, ingredientName, type) {
+        const { selectedItems } = this.state;
+        const updatedItems = { ...selectedItems };
+        this.setState({errorQuantity: false});
+        // console.log(selectedItems);
+        // console.log("here in handle: ", updatedItems[itemName].ingredients[index][ingIndex].quantity, " index: ", index);
+        
+        switch (type) {
+            case 'increase':
+                updatedItems[itemName].ingredients[index].find(ingredient => ingredient.name === ingredientName).quantity++;
+                break;
+            case 'decrease':
+                const ingredient = updatedItems[itemName].ingredients[index].find(ingredient => ingredient.name === ingredientName);
+                if (ingredient &amp;&amp; ingredient.quantity > 0) {
+                    ingredient.quantity--;
+                } else {
+                    this.setState({ errorQuantity: true });
+                }
+                break;
+            default:
+                break;
+        }
+        this.setState({selectedItems: updatedItems});
+    }
+
+    /**
+     * Handles the back action.
+     * 
+     * Saves the selected items to the server.
+     */
+    handleBack = () => {
+        const { selectedItems } = this.state;
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/customerOrdersAPI/save", {
+        // fetch("http://localhost:9000/customerOrdersAPI/save", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({selectedItems})
+        })
+        .then(() => {
+            console.log("data saved");
+            console.log(selectedItems);
+        })
+        .catch(error => {
+            console.error("Error saving order:", error);
+            window.alert("Error loading check out screen. Please try again later.");
+        });
+    };
+
+    /**
+     * Handles the submission of the order.
+     * 
+     * It calculates order number, current date and time, and total ingredients.
+     * Submits the order and its ingredients to the server.
+     */
+    handleSubmit() {
+        const { total, orderNumInput, selectedItems, notes } = this.state;
+
+        this.orderNum = orderNumInput[0].max + 1;
+        const currentDate = new Date();
+
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        const order_date = `${year}-${month}-${day}`;
+
+        const hours = String(currentDate.getHours()).padStart(2, '0');
+        const minutes = String(currentDate.getMinutes()).padStart(2, '0');
+        const seconds = String(currentDate.getSeconds()).padStart(2, '0');
+        const order_time = `${hours}:${minutes}:${seconds}`;
+
+        const totalIngredients = {};
+        for (const itemName in selectedItems) {
+            const item = selectedItems[itemName];
+            // console.log("Item:", item);
+            item.ingredients.forEach(subList => { 
+                subList.forEach(ingredient => { 
+                    const { name, quantity } = ingredient; 
+                    if (!totalIngredients[name]) {
+                        totalIngredients[name] = quantity;
+                    } else {
+                        totalIngredients[name] += quantity;
+                    }
+                });
+            });
+        }
+
+        // console.log(selectedItems);
+
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/customerOrdersAPI/submit", {
+        // fetch("http://localhost:9000/customerOrdersAPI/submit", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({orderNum: this.orderNum, total, order_date, order_time, notes, selectedItems})
+        })
+        .then(() => {})
+        .catch(error => {
+            console.error("Error submitting order:", error);
+            window.alert("Error submitting order. Please try again later.");
+        })
+
+        // //fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/customerOrdersAPI/submitDetails", {
+        // fetch("http://localhost:9000/customerOrdersAPI/submitDetails", {
+        //     method: "POST",
+        //     headers: {
+        //         "Content-Type": "application/json"
+        //     },
+        //     body: JSON.stringify({orderNum: this.orderNum, selectedItems})
+        // })
+        // .then(() => {})
+        // .catch(error => {
+        //     console.error("Error submitting order:", error);
+        //     window.alert("Error submitting order. Please try again later.");
+        // })
+
+        // console.log("submit handle total: ", total);
+        // fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/customerOrdersAPI/submitOrderAll", {
+        // fetch("http://localhost:9000/customerOrdersAPI/submitOrderAll", {
+        //     method: "POST",
+        //     headers: {
+        //         "Content-Type": "application/json"
+        //     },
+        //     body: JSON.stringify({orderNum: this.orderNum, total, order_time, order_date, notes, selectedItems})
+        // })
+        // .then(() => {
+        //     this.setState({selectedItems: {}, notes: ""});
+        //     this.toggleConfirmationPopUp();
+        // })
+        // .catch(error => {
+        //     console.error("Error submitting order:", error);
+        //     window.alert("Error submitting order. Please try again later.");
+        // })
+
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/customerOrdersAPI/submitIngredients", {
+        // fetch("http://localhost:9000/customerOrdersAPI/submitIngredients", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({totalIngredients})
+        })
+        .then(() => {
+            this.setState({selectedItems: {}, notes: ""});
+            this.toggleConfirmationPopUp();
+        })
+        .catch(error => {
+            console.error("Error submitting order ingredients:", error);
+            window.alert("Error submitting order ingredients. Please try again later.");
+        })
+        
+    }
+
+     /**
+     * Handles changes in the notes input field.
+     * 
+     * @param {Object} event - The event object representing the change in the input field.
+    */
+    handleNoteChange = (event) => {
+        this.setState({ notes: event.target.value });
+    }
+
+    /**
+     * Renders the selected items for checkout along with their quantities and prices.
+     * 
+     * @returns {JSX.Element} The JSX elements representing the selected items.
+     */
+    renderSelectedItems() {
+        const { selectedItems, total, submitted, ingredientData} = this.state;
+        return (
+            &lt;div>
+                {submitted &amp;&amp; (
+                    &lt;Navigate to="/ManagerOrders" replace={true} />
+                )}
+                {/* &lt;h2>Order&lt;/h2> */}
+                &lt;div className="checkout-selected-items-container">
+                    &lt;div className="selected-items-list">
+                    {Object.entries(selectedItems).map(([itemName, selectedItem]) => (
+                        &lt;div key={itemName} className="selected-item">
+                            &lt;div className="item-info">
+                                &lt;div className="quantity-buttons">
+                                    &lt;p>{selectedItem.quantity}&lt;/p>
+                                    &lt;div style={{ width: '10px' }}>&lt;/div>
+                                    &lt;button className="quantity-button" onClick={() => this.handleQuantityChange(itemName, 'increase')}>+&lt;/button>
+                                    &lt;button className="quantity-button" onClick={() => this.handleQuantityChange(itemName, 'decrease')}>-&lt;/button>
+                                &lt;/div>
+                            &lt;/div>
+                            &lt;div className="item-name">
+                                &lt;p>{selectedItem.name}&lt;/p>
+                            &lt;/div>
+                            &lt;p className="checkout-item-price">${(selectedItem.quantity * selectedItem.price).toFixed(2)}&lt;/p>
+                            {selectedItem.ingredients &amp;&amp; (
+                                &lt;div className="item-ingredients">
+                                    &lt;div>
+                                        {selectedItem.ingredients.slice(1).map((ingredientList, index) => (
+                                            &lt;div key={index} className = "checkout-ingredient-box">
+                                                {ingredientList
+                                                    .filter(ingredient => ingredient.quantity >= 0)
+                                                    .filter(ingredient => ingredientData[ingredient.name] &amp;&amp; ingredientData[ingredient.name].location !== "Storage")
+                                                    .filter(ingredient => !(ingredient.name.includes(" - ") &amp;&amp; ingredient.quantity === 0))
+                                                    .filter(ingredient  => ingredientData[ingredient.name].custom)
+                                                    .map((ingredient, subIndex) => (
+                                                        &lt;div key={subIndex} className="ingredient-row">
+                                                            &lt;div className="quantity-buttons">
+                                                                &lt;p>{ingredient.quantity}&lt;/p>
+                                                                &lt;div style={{ width: '10px' }}>&lt;/div>
+                                                                &lt;button className="quantity-button" onClick={() => this.handleIngredientQuantityChange(itemName, index + 1, ingredient.name, 'increase')}>+&lt;/button>
+                                                                &lt;button className="quantity-button" onClick={() => this.handleIngredientQuantityChange(itemName, index + 1, ingredient.name, 'decrease')}>-&lt;/button>
+                                                                &lt;p> &amp;emsp; {ingredient.name}&lt;/p>
+                                                            &lt;/div>
+                                                        &lt;/div>
+                                                    ))
+                                                }
+                                                &lt;div style={{ width: '100px' }}>&lt;/div>
+                                            &lt;/div>
+                                        ))}
+                                    &lt;/div>
+                                &lt;/div>
+                            )}
+                            
+                        &lt;/div>
+                    ))}
+                    &lt;/div>
+                &lt;/div>
+                &lt;div className = "checkout-total-price">
+                    &lt;p>Total: ${total.toFixed(2)}&lt;/p>
+                &lt;/div>
+                
+            &lt;/div>
+        )
+    }
+
+    /**
+     * Renders the check out screen component.
+     * @returns {JSX.Element} The JSX element representing the check out screen.
+     */
+    render() {
+        const { isConfirmationOpen, total, notes, errorQuantity } = this.state;
+        const penTextSize = localStorage.getItem('textsize');
+        document.documentElement.style.setProperty('--text-size', penTextSize);
+        const penTextWeight = localStorage.getItem('boldtext');
+        document.documentElement.style.setProperty('--bold-text', penTextWeight);
+        return (
+            &lt;div style={{fontSize:(localStorage.getItem('textsize')*16), fontWeight: localStorage.getItem('boldtext'), filter: `invert(${localStorage.getItem('colorinv')})`}}>
+                &lt;div className = "checkout">
+                    &lt;div className = "checkout-left">
+                        &lt;div className="customer-submit">
+                            {this.renderSelectedItems()}
+                        &lt;/div>
+                    &lt;/div>
+                    &lt;div className = "checkout-right">
+                        &lt;div className = "checkout-notes">
+                            &lt;p>Notes&lt;/p>
+                            &lt;textarea
+                                type="text"
+                                value={notes}
+                                onChange={this.handleNoteChange}
+                                placeholder="Add notes..."
+                            />
+                             &lt;div className = "error-message">
+                                {errorQuantity &amp;&amp; &lt;h3>Quantity already 0!&lt;/h3>}
+                            &lt;/div>
+                        &lt;/div>
+                        &lt;div className = "checkout-footer">
+                            &lt;Link to="/ManagerOrders">
+                                &lt;button onClick={() => this.handleBack()}>Back&lt;/button>
+                            &lt;/Link>
+                            &lt;button onClick={() => this.handleSubmit()}>Submit Order&lt;/button>
+                        &lt;/div>
+                    &lt;/div>
+                &lt;/div>
+
+                {isConfirmationOpen &amp;&amp; (
+                    &lt;OrderCompletePopUp
+                        onClose={this.reloadPage}
+                        orderNumber = {this.orderNum}
+                        totalPrice = {total}
+                    />
+                )}
+                &lt;div id="google_translate_element">&lt;/div>
+            &lt;/div>
+        );
+    }
+}
+
+export default ManagerSubmit;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-AddEmployeePopup.html">AddEmployeePopup</a></li><li><a href="module-App.html">App</a></li><li><a href="module-ConfirmationPopup.html">ConfirmationPopup</a></li><li><a href="module-CustomerOrdersAPI.html">CustomerOrdersAPI</a></li><li><a href="module-DisplayOrder.html">DisplayOrder</a></li><li><a href="module-EditEmployeePopup.html">EditEmployeePopup</a></li><li><a href="module-EditIngredientPopup.html">EditIngredientPopup</a></li><li><a href="module-EmployeesRouter.html">EmployeesRouter</a></li><li><a href="module-Ingredients.html">Ingredients</a></li><li><a href="module-IngredientsRouter.html">IngredientsRouter</a></li><li><a href="module-MenuItemIngredientsRouter.html">MenuItemIngredientsRouter</a></li><li><a href="module-MenuItemsAPI.html">MenuItemsAPI</a></li><li><a href="module-SupplierOrderRouter.html">SupplierOrderRouter</a></li><li><a href="module-Suppliers.html">Suppliers</a></li><li><a href="module-Trends.html">Trends</a></li><li><a href="module-TrendsAPI.html">TrendsAPI</a></li><li><a href="module-landingAPI.html">landingAPI</a></li></ul><h3>Classes</h3><ul><li><a href="AddIngredientPopup.html">AddIngredientPopup</a></li><li><a href="AddMenuItemPopup.html">AddMenuItemPopup</a></li><li><a href="CashierOrders.html">CashierOrders</a></li><li><a href="CashierSubmit.html">CashierSubmit</a></li><li><a href="CustomerOrders.html">CustomerOrders</a></li><li><a href="CustomerSubmit.html">CustomerSubmit</a></li><li><a href="EditMenuItemPopup.html">EditMenuItemPopup</a></li><li><a href="Employees.html">Employees</a></li><li><a href="HandleOAuth.html">HandleOAuth</a></li><li><a href="Kitchen.html">Kitchen</a></li><li><a href="Landing.html">Landing</a></li><li><a href="ManagerOrders.html">ManagerOrders</a></li><li><a href="ManagerSubmit.html">ManagerSubmit</a></li><li><a href="MenuBoard.html">MenuBoard</a></li><li><a href="MenuBoard2.html">MenuBoard2</a></li><li><a href="MenuBoardImages.html">MenuBoardImages</a></li><li><a href="MenuItemPopUp.html">MenuItemPopUp</a></li><li><a href="MenuManager.html">MenuManager</a></li><li><a href="NewSupplierOrderForm.html">NewSupplierOrderForm</a></li><li><a href="OrderCompletePopUp.html">OrderCompletePopUp</a></li><li><a href="OrderDisplays.html">OrderDisplays</a></li><li><a href="RegularKitchen.html">RegularKitchen</a></li><li><a href="Settings.html">Settings</a></li><li><a href="SupplierOrderDetailsPopUp.html">SupplierOrderDetailsPopUp</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed May 01 2024 01:21:47 GMT-0500 (Central Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+
+.popup-overlay {
+    position:fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; 
+}
+
+
+.popup-content-menu{
+    position: absolute;
+    background-color: #FAF4E8;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+    max-height: 500px; 
+    overflow-y: auto; 
+  }
+  .popup-content{
+    /* position: absolute; */
+    background-color: #FAF4E8;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+    max-height: 500px; 
+    overflow-y: auto; 
+  }
+
+.ingredient-container {
+    display: flex; /* Arrange elements horizontally */
+    align-items: center; /* Vertically align content */
+    margin-bottom: 5px; /* Add some spacing between ingredients */
+  }
+  
+  .ingredient-container label {
+    margin-right: 10px; /* Add some space between label and input */
+  }
+
+
+
+  .input-label
+  {
+      width: 50px;
+  }
+  
+  .ingredient-container button {
+    /* Style the delete button as needed */
+    background-color: rgb(221, 117, 117); /* Example red color */
+    color: #fff; /* Example white text */
+    padding: 5px; /* Adjust padding */
+    border: none; /* Remove default border */
+    border-radius: 3px; /* Add rounded corners */
+    cursor: pointer; /* Indicate clickable button */
+    width: 100px;
+    margin-left: 50px;
+  }
+
+  .category-price-container {
+  display: flex; /* Arrange elements horizontally */
+  align-items: center; /* Vertically align content */
+  margin-bottom: 10px; /* Add some spacing between sections */
+}
+
+.category-price-container h3 {
+  margin-right: 10px; /* Add some space between label and dropdown/input */
+}
+
+.add-ingredient-container {
+    display: flex; /* Arrange elements horizontally */
+  }
+  
+  .add-ingredient-container button {
+    margin-left: 10px; /* Add some space between dropdown and button */
+    /* Style the button as needed */
+    background-color: #007bff; /* Example blue color */
+    color: #fff; /* Example*/
+  }

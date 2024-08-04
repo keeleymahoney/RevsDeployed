@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/Landing.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/Landing.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { Component } from "react";
+import logo from "./logo.svg";
+import "./App.css";
+import "./Landing.css";
+
+/**
+ * @author Brandon Cisneros
+ * Component for Landing screen
+ */
+class Landing extends Component {
+    /**
+     * Constructs a new instance of the Landing screen component
+     * 
+     * @param {object} props The properties passed to the component.
+     */
+    constructor(props) {
+        super(props);
+        this.state = { apiResponse: [] };
+    }
+
+    /**
+     * Calls API to test API connection
+     */
+    callAPI() {
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/testapi")
+            .then(res => res.json())
+            .then(res => this.setState({ apiResponse: res }))
+            .catch(err => err);
+    }
+
+    /**
+     * Executes when the component is mounted.
+     * Calls methods to fetch test data and initialize Google Translate.
+     * This lifecycle method is invoked immediately after a component is mounted.
+     */
+    componentDidMount() {
+        this.callAPI();
+        this.initializeGoogleTranslate();
+    }
+
+    /**
+     * Initializes Google Translate API if not already initialized.
+     * Adds a script tag to the document body to load the necessary Google Translate script asynchronously.
+     * Sets up the callback function to initialize Google Translate when the script is loaded.
+     */
+    initializeGoogleTranslate() {
+        if (!window.googleTranslateElementInit) {
+            const script = document.createElement("script");
+            script.type = "text/javascript";
+            script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+            script.async = true;
+            document.body.appendChild(script);
+            window.googleTranslateElementInit = this.googleTranslateElementInit.bind(this);
+        }
+    }
+
+    /**
+     * Callback function to initialize Google Translate once the script is loaded.
+     * Creates a new Google Translate element with English as the page language.
+     * @param {string} id - The id of the HTML element where the translation widget should be placed.
+     */
+    googleTranslateElementInit() {
+        new window.google.translate.TranslateElement({ pageLanguage: "en" }, "google_translate_element");
+    }
+
+    /**
+     * Renders the landing screen component.
+     * @returns {JSX.Element} The JSX element representing the landing screen.
+     */
+    render() {
+        // Checks for accessibility data, or defaults it
+        if (!localStorage.getItem('textsize')) {
+            localStorage.setItem('textsize', 1);
+        }
+        if (!localStorage.getItem('boldtext')) {
+            localStorage.setItem('boldtext', 'normal');
+        }
+        if (!localStorage.getItem('colorinv')) {
+            localStorage.setItem('colorinv', '0');
+        }
+
+        const penTextSize = localStorage.getItem('textsize');
+        document.documentElement.style.setProperty('--text-size', penTextSize);
+        const penTextWeight = localStorage.getItem('boldtext');
+        document.documentElement.style.setProperty('--bold-text', penTextWeight);
+        // console.log(this.state.apiResponse);
+        // console.log(localStorage.getItem('textsize'));
+        return (
+                // Redirect buttons for settings or customer ordering
+                &lt;div id="Landing" className="App"style={{fontSize:(localStorage.getItem('textsize')*16), fontWeight: localStorage.getItem('boldtext'), filter: `invert(${localStorage.getItem('colorinv')})`}}>
+                    &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/settings">&lt;button id="settingsbutton">Settings&lt;/button>&lt;/a>
+                    &lt;div className="Landing-header">
+                        &lt;img src={logo} className="Landing-logo" alt="logo" />
+                        &lt;h1 className="Landing-title">Welcome to Rev's American Grill!&lt;/h1>
+                        &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/customerOrders">&lt;button id='beginbutton'>Click to Begin&lt;/button>&lt;/a>
+                    &lt;/div>
+                    &lt;div id="google_translate_element">&lt;/div>
+                &lt;/div>
+        );
+    }
+}
+
+export default Landing;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-AddEmployeePopup.html">AddEmployeePopup</a></li><li><a href="module-App.html">App</a></li><li><a href="module-ConfirmationPopup.html">ConfirmationPopup</a></li><li><a href="module-CustomerOrdersAPI.html">CustomerOrdersAPI</a></li><li><a href="module-DisplayOrder.html">DisplayOrder</a></li><li><a href="module-EditEmployeePopup.html">EditEmployeePopup</a></li><li><a href="module-EditIngredientPopup.html">EditIngredientPopup</a></li><li><a href="module-EmployeesRouter.html">EmployeesRouter</a></li><li><a href="module-Ingredients.html">Ingredients</a></li><li><a href="module-IngredientsRouter.html">IngredientsRouter</a></li><li><a href="module-MenuItemIngredientsRouter.html">MenuItemIngredientsRouter</a></li><li><a href="module-MenuItemsAPI.html">MenuItemsAPI</a></li><li><a href="module-SupplierOrderRouter.html">SupplierOrderRouter</a></li><li><a href="module-Suppliers.html">Suppliers</a></li><li><a href="module-Trends.html">Trends</a></li><li><a href="module-TrendsAPI.html">TrendsAPI</a></li><li><a href="module-landingAPI.html">landingAPI</a></li></ul><h3>Classes</h3><ul><li><a href="AddIngredientPopup.html">AddIngredientPopup</a></li><li><a href="AddMenuItemPopup.html">AddMenuItemPopup</a></li><li><a href="CashierOrders.html">CashierOrders</a></li><li><a href="CashierSubmit.html">CashierSubmit</a></li><li><a href="CustomerOrders.html">CustomerOrders</a></li><li><a href="CustomerSubmit.html">CustomerSubmit</a></li><li><a href="EditMenuItemPopup.html">EditMenuItemPopup</a></li><li><a href="Employees.html">Employees</a></li><li><a href="HandleOAuth.html">HandleOAuth</a></li><li><a href="Kitchen.html">Kitchen</a></li><li><a href="Landing.html">Landing</a></li><li><a href="ManagerOrders.html">ManagerOrders</a></li><li><a href="ManagerSubmit.html">ManagerSubmit</a></li><li><a href="MenuBoard.html">MenuBoard</a></li><li><a href="MenuBoard2.html">MenuBoard2</a></li><li><a href="MenuBoardImages.html">MenuBoardImages</a></li><li><a href="MenuItemPopUp.html">MenuItemPopUp</a></li><li><a href="MenuManager.html">MenuManager</a></li><li><a href="NewSupplierOrderForm.html">NewSupplierOrderForm</a></li><li><a href="OrderCompletePopUp.html">OrderCompletePopUp</a></li><li><a href="OrderDisplays.html">OrderDisplays</a></li><li><a href="RegularKitchen.html">RegularKitchen</a></li><li><a href="Settings.html">Settings</a></li><li><a href="SupplierOrderDetailsPopUp.html">SupplierOrderDetailsPopUp</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed May 01 2024 01:21:47 GMT-0500 (Central Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

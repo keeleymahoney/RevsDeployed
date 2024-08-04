@@ -1,0 +1,54 @@
+:root {
+  --text-size: 1; /* Default text size */
+  --bold-text: normal;
+}
+
+
+button {
+    background-color: #800000;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin:10px;
+
+}
+
+#backbutton {
+    background-color: #800000;
+    border: none;
+    color: white;
+    position:fixed;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: calc(1rem * var(--text-size));
+    font-weight: calc(var(--bold-text));
+    left:10px;
+    width:auto;
+  }
+
+#exitbutton {
+  background-color: #800000;
+  border: none;
+  color: white;
+  position:fixed;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: calc(1rem * var(--text-size));
+  font-weight: calc(var(--bold-text));
+  right:10px;
+  width:auto;
+}
+
+
+table {
+  margin-left: auto;
+  margin-right: auto;
+}

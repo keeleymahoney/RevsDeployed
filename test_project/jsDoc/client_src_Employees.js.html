@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/Employees.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/Employees.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { Component } from "react";
+//import logo from "./logo.svg";
+import "./App.css";
+//import { BrowserRouter as Router, Route, Link, Routes } from 'react-router-dom';
+//import Ingredients from './Ingredients';
+import EditEmployeePopup from "./EditEmployeePopup";
+import AddEmployeePopup from "./AddEmployeePopup";
+import ConfirmationPopup from "./ConfirmationPopup";
+
+/**
+ * Component for managing employee data.
+ * @author Keeley Mahoney
+ */
+class Employees extends Component {
+    /**
+     * Constructor for Employees component.
+     * @constructor
+     * @param {Object} props - The component props
+     */
+    constructor(props) {
+        super(props);
+        this.state = { employees: [],
+            isEditPopupOpen: false,
+            isConfirmationPopupOpen: false,
+            isAddPopupOpen: false,
+            editedEmployee: [],
+        newEmployee:  {
+            employee_id: -1,
+            manager: false,
+            employee_name: "",
+            pswd: "0000"
+        },
+        message: ""
+         };
+    }
+
+    /**
+ * Fetches employee data from the API and updates the state.
+ * @function callAPI
+ * @memberof Employees
+ */
+    callAPI() {
+        console.log("hello");
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/employeesAPI")
+            .then(res => res.json())
+            .then(res => this.setState({ employees: res }))
+            .catch(err => err);
+    }
+
+    /**
+     * Calls the API to fetch employee data when the component mounts.
+     */
+    componentDidMount() {
+        this.callAPI();
+        this.initializeGoogleTranslate();
+    }
+    
+    /**
+     * Initializes Google Translate if not already initialized.
+     */
+    initializeGoogleTranslate() {
+        if (!window.googleTranslateElementInit) {
+            const script = document.createElement("script");
+            script.type = "text/javascript";
+            script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+            script.async = true;
+            document.body.appendChild(script);
+            window.googleTranslateElementInit = this.googleTranslateElementInit.bind(this);
+        }
+    }
+
+    /**
+     * Initializes Google Translate element.
+     */
+    googleTranslateElementInit() {
+        new window.google.translate.TranslateElement({ pageLanguage: "en" }, "google_translate_element");
+    }
+
+    /**
+     * Opens the edit employee popup with the selected employee data.
+     * @param {Object} employee - The employee object to be edited
+     */
+    openEditPopup(employee)
+    {
+        this.setState({editedEmployee: employee, isEditPopupOpen: true});
+    }
+
+    /**
+     * Opens the add employee popup.
+     */
+    openAddPopup()
+    {
+        this.setState({isAddPopupOpen: true});
+    }
+
+     /**
+     * Toggles the visibility of the confirmation popup.
+     */
+    toggleConfirmationPopup = () => {
+        // Toggle confirmation popup
+        this.setState(prevState => ({ isConfirmationPopupOpen: !prevState.isConfirmationPopupOpen }));
+    };
+
+    /**
+     * Closes the edit employee popup.
+     */
+    closeEditPopup = () => {
+        this.setState({ isEditPopupOpen: false, editedEmployee: null });
+    }
+
+    /**
+     * Closes the add employee popup.
+     */
+    closeAddPopup = () => {
+        this.setState({ isAddPopupOpen: false, newEmployee:  {
+            employee_id: -1,
+            manager: false,
+            employee_name: "",
+            pswd: "0000"
+        } });
+    }
+
+    /**
+     * Handles input change for existing employee in the edit employee popup.
+     * @param {Event} e - The input change event
+     * @param {string} key - The key of the input field being changed
+     */
+    handleExistingInputChange = (e, key) => {
+        const { editedEmployee } = this.state;
+
+        //shallow copy, and gets new ingredient
+        this.setState({
+            editedEmployee: {
+                ...editedEmployee,
+                [key]: e.target.value
+            }
+        });
+    };
+
+    /**
+     * Handles input change for adding a new employee.
+     * @param {Event} e - The input change event
+     * @param {string} key - The key of the input field being changed
+     */
+    handleNewInputChange = (e, key) => {
+        const { newEmployee } = this.state;
+
+        //shallow copy, and gets new ingredient
+        this.setState({
+            newEmployee: {
+                ...newEmployee,
+                [key]: e.target.value
+            }
+        });
+    };
+
+     /**
+     * Handles submission of new employee data.
+     */
+    handleNewSubmit = () => {
+        const { newEmployee } = this.state;
+
+        console.log(newEmployee);
+        this.setState({ message: `Employee: ${this.state.newEmployee.employee_name} has been added as an employee.` });
+
+        //calls the updateIngredients() function in the backend
+        //
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/employeesAPI/add", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(newEmployee)
+        })
+        .then(res => res.text())
+        .then(data => {
+            //console.log(data); // Log the response from the server
+            
+
+            //update front end
+            this.callAPI();
+            this.closeAddPopup();
+            this.toggleConfirmationPopup();
+        })
+
+        //catch any errors
+        .catch(err => console.error(err));
+    };
+
+    /**
+     * Handles submission of edited employee data.
+     */
+    handleSubmit = () => {
+        const { editedEmployee } = this.state;
+
+        console.log(editedEmployee);
+        this.setState({ message: `Employee: ${this.state.editedEmployee.employee_name} has been successfully edited.` });
+
+        //calls the updateIngredients() function in the backend
+        //
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/employeesAPI/update", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(editedEmployee)
+        })
+        .then(res => res.text())
+        .then(data => {
+            //console.log(data); // Log the response from the server
+            
+
+            //update front end
+            this.callAPI();
+            this.closeEditPopup();
+            this.toggleConfirmationPopup();
+        })
+
+        //catch any errors
+        .catch(err => console.error(err));
+    };
+
+     /**
+     * Handles deletion of an employee.
+     * @param {Object} employee - The employee object to be deleted
+     */
+    handleEmployeeDelete = (employee) => {
+        this.setState({ message: `Employee: ${employee.employee_name} has been successfully deleted.` });
+        fetch("https://project-3-full-stack-agile-web-project-3-uub4.onrender.com/employeesAPI/delete", {
+            method: "put",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ employee_id: employee.employee_id })
+        })
+        .then(res => res.text())
+        .then(data => {
+            //console.log(data); // Log the response from the server
+            
+
+            //update front end
+            this.callAPI();
+            this.toggleConfirmationPopup();
+        })
+
+        //catch error
+        .catch(err => console.error(err));
+    };
+
+
+    /**
+     * Renders the employee table.
+     * @returns {JSX.Element} Employee table JSX
+     */
+    renderTable() {
+        const { employees } = this.state;
+        // Sort employees by employee_id
+        const sortedEmployees = employees.slice().sort((a, b) => a.employee_id - b.employee_id);
+    
+        return (
+            &lt;div className="menu-items-grid">
+                {sortedEmployees.map((item, index) => (
+                    &lt;div key={index} className="menu-item">
+                        &lt;div className="employee">
+                            &lt;div className = "menu-item-name">
+                            &lt;p>{item.employee_name}&lt;/p>
+                            &lt;p>ID: {item.employee_id}&lt;/p>
+                            &lt;p>{item.manager ? &lt;span className="manager-label">Manager&lt;/span> : &lt;span className="server-label">Server&lt;/span>}&lt;/p>
+                            &lt;/div>
+                            &lt;div className="button-container">
+                                &lt;button onClick={() => this.openEditPopup(item)}>Edit&lt;/button>
+                                &lt;button onClick={() => this.handleEmployeeDelete(item)}>Delete&lt;/button>
+                            &lt;/div>
+                        &lt;/div>
+                    &lt;/div>
+                ))}
+            &lt;/div>
+        );
+    }
+
+    /**
+     * Renders the Employees component.
+     * @returns {JSX.Element} Employees component JSX
+     */
+    render() {
+        console.log(this.state.apiResponse);
+        const penTextSize = localStorage.getItem('textsize');
+        document.documentElement.style.setProperty('--text-size', penTextSize);
+        const penTextWeight = localStorage.getItem('boldtext');
+        document.documentElement.style.setProperty('--bold-text', penTextWeight);
+        return (
+                &lt;div className="Employee" style={{fontSize:(localStorage.getItem('textsize')*16), fontWeight: localStorage.getItem('boldtext'), filter: `invert(${localStorage.getItem('colorinv')})`}}>
+                    &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/settings">&lt;button id="settingsbutton">Settings&lt;/button>&lt;/a>
+                    &lt;button id = "refreshbutton" onClick={this.callAPI}>Refresh&lt;/button>
+                    &lt;header className="Employee-header">
+                        &lt;h1 className="Employee-title">Employee Screen&lt;/h1>
+                    &lt;/header>
+                    &lt;div className="navigation-buttons">
+                            {/* Navigation Buttons */}
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/Ingredients">&lt;button>Inventory&lt;/button> &lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/Trends">&lt;button>Trends&lt;/button> &lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/Suppliers">&lt;button>Supplier Order&lt;/button> &lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/MenuManager">&lt;button>Edit Menu&lt;/button> &lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/employees"> &lt;button id = "selected" >Employee List&lt;/button>&lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/OrderDisplays"> &lt;button >Previous Orders&lt;/button>&lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/kitchen"> &lt;button >Kitchen&lt;/button>&lt;/a>
+                            &lt;a href="https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/managerOrders"> &lt;button >Order&lt;/button>&lt;/a>
+                        &lt;/div>
+                    &lt;div>
+                        &lt;button onClick={() => this.openAddPopup()}>Add New Employee&lt;/button>
+                        &lt;h2>Edit Current Employees&lt;/h2>
+                        {this.renderTable()}
+                    &lt;/div>
+
+                    {this.state.isEditPopupOpen &amp;&amp; (
+                    &lt;EditEmployeePopup
+                        onClose={this.closeEditPopup}
+                        onSubmit={this.handleSubmit}
+                        onDelete={this.handleEmployeeDelete}
+                        employee={this.state.editedEmployee}
+                        onInputChange={this.handleExistingInputChange}
+                    />
+                )}
+
+                    {this.state.isAddPopupOpen &amp;&amp; (
+                                        &lt;AddEmployeePopup
+                                            onClose={this.closeAddPopup}
+                                            onSubmit={this.handleNewSubmit}
+                                            employee={this.state.newEmployee}
+                                            onNewChange={this.handleNewInputChange}
+                                        />
+                                    )}
+
+                    {this.state.isConfirmationPopupOpen &amp;&amp; (
+                                            &lt;ConfirmationPopup
+                                                onClose={this.toggleConfirmationPopup}
+                                                message= {this.state.message}
+                                            />
+                                        )}
+                    &lt;div id="google_translate_element">&lt;/div>
+                &lt;/div>
+        );
+    }
+}
+
+export default Employees;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-AddEmployeePopup.html">AddEmployeePopup</a></li><li><a href="module-App.html">App</a></li><li><a href="module-ConfirmationPopup.html">ConfirmationPopup</a></li><li><a href="module-CustomerOrdersAPI.html">CustomerOrdersAPI</a></li><li><a href="module-DisplayOrder.html">DisplayOrder</a></li><li><a href="module-EditEmployeePopup.html">EditEmployeePopup</a></li><li><a href="module-EditIngredientPopup.html">EditIngredientPopup</a></li><li><a href="module-EmployeesRouter.html">EmployeesRouter</a></li><li><a href="module-Ingredients.html">Ingredients</a></li><li><a href="module-IngredientsRouter.html">IngredientsRouter</a></li><li><a href="module-MenuItemIngredientsRouter.html">MenuItemIngredientsRouter</a></li><li><a href="module-MenuItemsAPI.html">MenuItemsAPI</a></li><li><a href="module-SupplierOrderRouter.html">SupplierOrderRouter</a></li><li><a href="module-Suppliers.html">Suppliers</a></li><li><a href="module-Trends.html">Trends</a></li><li><a href="module-TrendsAPI.html">TrendsAPI</a></li><li><a href="module-landingAPI.html">landingAPI</a></li></ul><h3>Classes</h3><ul><li><a href="AddIngredientPopup.html">AddIngredientPopup</a></li><li><a href="AddMenuItemPopup.html">AddMenuItemPopup</a></li><li><a href="CashierOrders.html">CashierOrders</a></li><li><a href="CashierSubmit.html">CashierSubmit</a></li><li><a href="CustomerOrders.html">CustomerOrders</a></li><li><a href="CustomerSubmit.html">CustomerSubmit</a></li><li><a href="EditMenuItemPopup.html">EditMenuItemPopup</a></li><li><a href="Employees.html">Employees</a></li><li><a href="HandleOAuth.html">HandleOAuth</a></li><li><a href="Kitchen.html">Kitchen</a></li><li><a href="Landing.html">Landing</a></li><li><a href="ManagerOrders.html">ManagerOrders</a></li><li><a href="ManagerSubmit.html">ManagerSubmit</a></li><li><a href="MenuBoard.html">MenuBoard</a></li><li><a href="MenuBoard2.html">MenuBoard2</a></li><li><a href="MenuBoardImages.html">MenuBoardImages</a></li><li><a href="MenuItemPopUp.html">MenuItemPopUp</a></li><li><a href="MenuManager.html">MenuManager</a></li><li><a href="NewSupplierOrderForm.html">NewSupplierOrderForm</a></li><li><a href="OrderCompletePopUp.html">OrderCompletePopUp</a></li><li><a href="OrderDisplays.html">OrderDisplays</a></li><li><a href="RegularKitchen.html">RegularKitchen</a></li><li><a href="Settings.html">Settings</a></li><li><a href="SupplierOrderDetailsPopUp.html">SupplierOrderDetailsPopUp</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed May 01 2024 01:21:47 GMT-0500 (Central Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

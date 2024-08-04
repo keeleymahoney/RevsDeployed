@@ -1,0 +1,368 @@
+:root {
+    --text-size: 1; /* Default text size */
+    --bold-text: normal;
+  }
+
+.App1 {
+    /* text-align: center; */
+    display: flex;
+    height: 100vh;
+}
+
+.App-logo {
+    height: 40vmin;
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .App-logo {
+        animation: App-logo-spin infinite 20s linear;
+    }
+}
+
+.App-header {
+    background-color: #282c34;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(10px + 2vmin);
+    color: white;
+}
+
+.App-link {
+    color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Overall page styling adjustments for larger elements */
+button {
+    font-size: calc(1rem * var(--text-size));
+    font-weight: calc(var(--bold-text));
+    /* Increase font size */
+    padding: 15px;
+    /* Larger padding for bigger boxes */
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button {
+    cursor: pointer;
+    background-color: white;
+    color: black;
+    border-color: black;
+    width: 80%;
+    text-align: center;
+}
+
+#selected {
+    background-color: #5f0e0e;
+    color: white;
+}
+
+button:hover {
+    background-color: #5f0e0e;
+    color: white;
+}
+
+/* Adjust navigation buttons */
+.navigation-buttons button {
+    margin-right: 10px;
+    /* Add space between buttons */
+    padding: 10px 20px;
+}
+
+/* Spacing adjustments */
+.add-order,
+.order-details {
+    margin-top: 30px;
+    /* Add more space between sections */
+}
+
+.done-button {
+    /* Keep the existing styles, but increase the size if needed */
+    padding: 10px 20px;
+    /* Larger button */
+    margin-left: 10px;
+}
+
+.sidebar {
+    width: 15%;
+    background-color: #FFE6BA;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* vertically aligned in the center */
+}
+
+.sidebar button.active {
+    background-color: #500000;
+    color: white;
+}
+
+.weather-box {
+    border: 1px solid black;
+    width: 14%;
+    position: absolute;
+    bottom: 10%;
+    border-radius: 10px;
+}
+
+.main {
+    flex: 1 0 50%; /* Set main content width to 50% */
+    padding: 20px;
+    overflow: auto;
+    background-color: #FAF4E8;
+}
+
+.right-sidebar {
+    width: 30%; 
+    background-color: #FFE6BA;
+    padding: 20px;
+    overflow: auto;
+    text-align: center;
+}
+
+.items-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    background-color: #FAF4E8;
+}
+
+.order-button-container {
+    width: 45%; 
+    margin: 10px;
+    background-color: #FAF4E8;
+}
+
+button:hover .button-text {
+    color: #fff; /* Change text color to white when button is hovered */
+}
+
+.button-text {
+    margin-top: 10px;
+    font-size: 16px;
+    text-align: center;
+}
+
+.button-image {
+    max-width: 100%; /* Ensures the image fits within the button */
+    max-height: 80%; /* Adjust this value based on your image and button size */
+}
+
+.item-info {
+    padding: 10px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.quantity-buttons {
+    display: flex;
+    align-items: center;
+    height: 20px;
+}
+
+div {
+    background-color: #FAF4E8;
+}
+.item-price {
+    text-align: right;
+    margin: 0;
+    padding: 0;
+}
+
+.item-name {
+    text-align: left;
+}
+.item-ingredients {
+    text-align: left;
+    padding-left: 20px;
+}
+.quantity-button {
+    background-color: #500000;
+    color: white;
+    border: none;
+    width: 30px; 
+    height: 30px; 
+    margin: 5px; 
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 25px;
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    font-weight: 500;
+}
+
+.selected-items-container {
+    height: 500px; 
+    overflow: auto;
+    border: 1px solid black;
+    padding: 15px;
+    padding-top: 5px;
+}
+
+.checkout-selected-items-container {
+    height: 600px; 
+    overflow: auto;
+    border: 1px solid black;
+    padding: 15px;
+    padding-top: 5px;
+    margin: 20px;
+}
+
+.selected-item {
+    padding: 10px;
+    /* border-bottom: 1px solid black; */
+}
+
+.submit-button {
+    margin-top: 10px;
+}
+
+.edit-button {
+    border: 1px solid white;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    display: flex;
+    margin: 2px;
+    width: 40px;
+    height: 40px;
+    margin-left: auto;
+}
+
+.edit-button img {
+    width: 25px;
+}
+
+.edit-button:hover {
+
+    background-color: #f8ba4c;
+}
+
+.edit-button-container {
+    text-align: right;
+}
+
+.ingredient-row {
+    display: flex;
+    align-items: center;
+    height: 50px;
+}
+
+.checkout-ingredient-box {
+    border-bottom: 1px solid black;
+    margin-bottom: 20px;
+}
+
+.checkout-total-price {
+    display: flex;
+    justify-content: center;
+    background-color: #500000;
+}
+
+.checkout-total-price p {
+    font-size: 20px;
+    width: 20%;
+    text-align: center; 
+    background-color: white;
+}
+
+.checkout {
+    display: flex;
+    flex-direction: row;
+}
+
+.checkout-left {
+    flex: 2;
+}
+
+.checkout-right {
+    flex: 1;
+}
+
+.checkout-notes {
+    height: 500px;
+    display: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.checkout-notes p {
+    display: block;
+    margin-bottom: 5px; 
+}
+
+.checkout-notes textarea {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 80%;
+    height: 100px;
+    max-height: 200px;
+    max-width: 400px;
+    box-sizing: border-box; 
+}
+.link-button {
+    text-decoration: none;
+    display: flex; /* Add display flex */
+    justify-content: center; /* Center the button horizontally */
+    width: 100%;
+}
+
+.next-button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #FFE6BA;
+    margin-top: 20px; 
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+}
+
+.order-screen-header {
+    background-color: #FAF4E8;
+    padding: 10px;
+    text-align: center;
+    color: black;
+    border-bottom: 1px solid black;
+}
+
+.left-logo {
+    width: 100px;
+    margin-right: 40px;
+}
+
+.right-logo {
+    width: 200px;
+    line-height: 0.5;
+    margin-right: 40px;
+    border: 1px solid black;
+}
+
+.middle-text {
+    display: flex;
+    flex-grow: 1; /* Let the text take up remaining space */
+    justify-content: center; /* Center the text */
+}
+
+.bold-date {
+    font-weight: bold;
+}

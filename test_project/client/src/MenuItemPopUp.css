@@ -1,0 +1,110 @@
+/* MenuItemPopUp.css */
+.quantity-button {
+    background-color: #500000;
+    color: white;
+    border: none;
+    width: 30px;
+    height: 30px;
+    margin: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 25px;
+    font-weight: 500;
+}
+
+.popup-window {
+    /* centers window in the middle of screen */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+    background-color: #FAF4E8;
+    overflow-y: auto;
+    width: 1100px;
+    height: 600px;
+
+    padding: 20px;
+}
+
+.popup-window p {
+    font-size: 20px;
+}
+
+.popup-div {
+    background-color: #FFE6BA;
+}
+
+
+.exit-button-container {
+    width: 100%;
+    bottom: 20px; 
+}
+
+.exit-button-container button {
+    /* Add button styles here */
+    width: 20%;
+    margin: 0 70px; /* Add 50px margin between buttons */
+}
+
+.error-message h3 {
+    color: #500000;
+    font-size: 25px;
+    border: 2px solid #500000; /* Border style */
+    padding: 10px; 
+}
+
+.ing-row {
+    display: flex;
+    align-items: center;
+    height: 50px;
+}
+
+.ing-list-row {
+    background-color: #FAF4E8;
+}
+
+.info-row {
+    height: 200px;
+    background-color: #FAF4E8;
+}
+
+.info-row img {
+    max-width: 400px;
+    height: auto;
+}
+
+.popup-window img {
+    max-width: 100%; /* Ensures the image fits within the button */
+    max-height: 100%; /* Adjust this value based on your image and button size */
+    float: left;
+}
+
+.grouped-ing-row {
+    padding: 20px;
+    display: flex;
+    flex-wrap: nowrap; /* Prevent wrapping to the next line */
+    overflow-x: auto; /* Allow horizontal scrolling if necessary */
+    align-items: center;
+}
+
+.grouped-ing-row h2 {
+    margin-right: 20px; /* Add space between "cheese" and buttons */
+}
+
+.grouped-ing-button {
+    margin: 0px; /* Add margin between buttons */
+    width: 30%;
+}
+
+.grouped-ing-selected-button {
+    background-color: #5f0e0e;
+    color: white;
+    width: 30%;
+}
+
+.grouped-ing-button:hover {
+    background-color: #f8ba4c;
+    color: black;
+}

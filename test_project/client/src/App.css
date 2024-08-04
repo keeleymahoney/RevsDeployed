@@ -1,0 +1,316 @@
+:root {
+  --text-size: 1; /* Default text size */
+  --bold-text: normal;
+}
+
+.App {
+  text-align: center;
+  min-height: 100vh;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.menu-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Adjust the width as needed */
+  gap: 20px; /* Adjust the gap between items */
+}
+
+.menu-item-name {
+  padding-bottom: 200px;
+}
+
+
+
+
+.menu-item {
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+.button-container {
+  text-align: center;
+  justify-content: center;
+  padding-left: 50px;
+}
+
+.menu-item {
+  /* Add any other styling for menu items here */
+  position: relative; /* Ensure relative positioning for the button container */
+}
+
+
+
+
+
+
+.button-container {
+  position: absolute;
+  bottom: 0;
+  left: 40%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column; /* Arrange buttons vertically */
+  align-items: center; /* Center items horizontally */
+  gap: 5px; /* Adjust the gap between buttons */
+}
+
+.button-container button {
+  /* Add any other styling for buttons here */
+  width: 100%; /* Ensure buttons fill the width of the container */
+}
+
+.button-container button{
+  text-align: center;
+}
+
+.container {
+  display: flex;
+}
+
+.category-container {
+  flex: 1;
+  margin-right: 20px; /* Adjust margin as needed */
+}
+
+.menu-items-container {
+  flex: 2;
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.navbar {
+  background-color: #333;
+  overflow: hidden;
+  padding: 14px 16px;
+}
+
+.navbar a {
+  color: white;
+  padding: 14px 20px;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.navbar a:hover {
+  background-color: #ddd;
+  color: black;
+}
+/* Overall page styling adjustments for larger elements */
+input[type="text"],
+input[type="number"],
+input[type="password"],
+select,
+button {
+    font-size: calc(1rem * var(--text-size));
+    font-weight: calc(var(--bold-text));
+    padding: 15px; /* Larger padding for bigger boxes */
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button {
+    cursor: pointer;
+    background-color: white;
+    color: black;
+    border-color: black;
+}
+
+#selected
+{
+  background-color:#5f0e0e;
+  color: white;
+
+}
+
+button:hover {
+    background-color: #5f0e0e;
+    color: white;
+}
+
+.navigation-buttons {
+  display: flex; /* Use flexbox */
+  justify-content: center; /* Center the buttons horizontally */
+}
+
+.order-row {
+  display: flex; /* Use flexbox to align items in a row */
+  justify-content: space-between; /* Distribute space between items */
+  margin-bottom: 20px; /* Add margin between rows */
+}
+
+.order-container {
+  width: calc(33.33% - 20px); /* Subtracting margin */
+  margin-right: 50px;
+  margin-left: 50px;
+  margin-bottom: 20px;
+  float: left;
+}
+
+.order-details {
+  border: 1px solid black;
+  padding: 10px;
+  width: 100%; /* Ensure order details take up full width of container */
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+/* Adjustments for button alignment */
+.order-details button {
+  margin-top: 10px;
+}
+
+/* Adjustments for vertical alignment */
+.order-details > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.order-details > div > div {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px; /* Add margin between detail items */
+}
+
+.order-details > div > div:last-child {
+  margin-bottom: 0; /* Remove margin for last detail item */
+}
+
+.navigation-buttons button {
+  margin-right: 10px; /* Add space between buttons */
+  width: auto;
+  padding: 10px 20px;
+}
+
+/* Spacing adjustments */
+.add-order, .order-details {
+    margin-top: 30px; /* Add more space between sections */
+}
+
+.done-button {
+    /* Keep the existing styles, but increase the size if needed */
+    padding: 10px 20px; /* Larger button */
+    margin-left: 10px;
+}
+
+
+.ingredient-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Change the number of columns as needed */
+  grid-gap: 50px; /* Adjust the gap between grid items */
+}
+
+
+
+.ingredient-grid button {
+  padding: 10px; /* Adjust button padding */
+  font-size: calc(1rem * var(--text-size));
+  font-weight: calc(var(--bold-text));
+/* Add any other styling as needed */
+}
+
+.ingredient-grid .ingredient-item {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.ingredient-grid .ingredient-item button.warning-button {
+  margin-top: 10px; /* Add space between the ingredient name button and the warning button */
+  background-color: #f8ba4c;
+}
+
+.ingredient-grid .ingredient-item button.warning-button:hover {
+  background-color: #500000;
+}
+
+#refreshbutton:hover {
+  background-color: #f8ba4c;
+}
+#refreshbutton {
+  background-color: white;
+  border: none;
+  color: black;
+  position:fixed;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: calc(1rem * var(--text-size));
+  font-weight: calc(var(--bold-text));
+  left:10px;
+  z-index: 1000;
+  width:auto;
+}
+
+header {
+  background-color: #500000;
+  color: white; /* Ensure text color contrasts with background */
+  padding: 10px; /* Add padding for better visual appearance */
+}
+
+.menu-item {
+  position: relative; /* Ensure relative positioning for the button container */
+}
+
+.menu-item-name {
+  /* Add any other styling for menu item names */
+  margin-bottom: 10px; /* Add margin below the menu item name */
+}
+
+
+/* .popup-overlay {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+} */ 
+
+/* .popup-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.popup-content h2 {
+  margin-top: 0;
+}
+
+/* Table styles unchanged */

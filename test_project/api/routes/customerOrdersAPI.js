@@ -1,0 +1,782 @@
+/**
+ * Module for managing customer order, customer order details, customer customizations in the database.
+ * @module CustomerOrdersAPI
+ */
+
+var express = require("express");
+var router = express.Router();
+const { Pool } = require('pg');
+const dotenv = require('dotenv').config();
+
+// Create express app
+const app = express();
+const port = 3001;
+
+// Create pool
+const pool = new Pool({
+    user: process.env.PSQL_USER,
+    host: process.env.PSQL_HOST,
+    database: process.env.PSQL_DATABASE,
+    password: process.env.PSQL_PASSWORD,
+    port: process.env.PSQL_PORT,
+    ssl: {rejectUnauthorized: false}
+});
+
+// Add process hook to shutdown pool
+process.on('SIGINT', function() {
+    pool.end();
+    console.log('Application successfully shutdown');
+    process.exit(0);
+});
+
+app.set("view engine", "ejs");
+
+/**
+ * Retrieves menu items from the database and sends them as a response.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+function getMenuItems(req, res, next) {
+    const menuItems = [];
+    pool
+        .query('SELECT * FROM Menu_Items;')
+        .then(query_res => {
+            for (let i = 0; i < query_res.rowCount; i++){
+                menuItems.push(query_res.rows[i]);
+            }
+            console.log(menuItems);
+            // Send response inside the .then() block 
+            res.send(menuItems);      
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error executing query:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+}
+
+
+/**
+ * Retrieves entree items from the database and sends them as a response.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+function getEntrees(req, res, next) {
+    const entreeItems = [];
+    pool
+        .query('SELECT * FROM Menu_Items WHERE Menu_Category = \'Entree\';')
+        .then(query_res => {
+            for (let i = 0; i < query_res.rowCount; i++){
+                entreeItems.push(query_res.rows[i]);
+            }
+            console.log(entreeItems);
+            // Send response inside the .then() block 
+            res.send(entreeItems);      
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error executing query:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+}
+
+/**
+ * Retrieve all side items from the menu_items table in the database.
+ * 
+ * @param {object} req - The request object.
+ * @param {object} res - The response object to send back the side items.
+ * @param {function} next - The next middleware function.
+ */
+function getSides(req, res, next) {
+    const sideItems = [];
+    pool
+        .query('SELECT * FROM Menu_Items WHERE Menu_Category = \'Side\';')
+        .then(query_res => {
+            for (let i = 0; i < query_res.rowCount; i++){
+                sideItems.push(query_res.rows[i]);
+            }
+            // console.log(sideItems);
+            // Send response inside the .then() block 
+            res.send(sideItems);      
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error executing query:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+}
+
+/**
+ * Retrieve all dessert items from the menu_items table in the database.
+ * 
+ * @param {object} req - The request object.
+ * @param {object} res - The response object to send back the dessert items.
+ * @param {function} next - The next middleware function.
+ */
+function getDesserts(req, res, next) {
+    const dessertItems = [];
+    pool
+        .query('SELECT * FROM Menu_Items WHERE Menu_Category = \'Dessert\';')
+        .then(query_res => {
+            for (let i = 0; i < query_res.rowCount; i++){
+                dessertItems.push(query_res.rows[i]);
+            }
+            // console.log(dessertItems);
+            // Send response inside the .then() block 
+            res.send(dessertItems);      
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error executing query:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+}
+
+/**
+ * Retrieves beverage items from the database and sends them as a response.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+function getBeverages(req, res, next) {
+    const beverageItems = [];
+    pool
+        .query('SELECT * FROM Menu_Items WHERE Menu_Category = \'Beverage\';')
+        .then(query_res => {
+            for (let i = 0; i < query_res.rowCount; i++){
+                beverageItems.push(query_res.rows[i]);
+            }
+            // console.log(beverageItems);
+            // Send response inside the .then() block 
+            res.send(beverageItems);      
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error executing query:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+}
+
+/**
+ * Retrieves seasonal items from the database and sends them as a response.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+function getSeasonals(req, res, next) {
+    const seasonalItems = [];
+    pool
+        .query('SELECT * FROM Menu_Items WHERE Menu_Category = \'Seasonal\';')
+        .then(query_res => {
+            for (let i = 0; i < query_res.rowCount; i++){
+                seasonalItems.push(query_res.rows[i]);
+            }
+            // console.log(seasonalItems);
+            // Send response inside the .then() block 
+            res.send(seasonalItems);      
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error executing query:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+}
+
+/**
+ * Retrieves ingredient data including name, storage location, and customizable status.
+ * 
+ * @param {object} req - The request object.
+ * @param {object} res - The response object to send back the ingredient data.
+ * @param {function} next - The next middleware function.
+ */
+function getIngredientData(req, res, next) {
+    const locations = [];
+    pool
+        .query('SELECT ingredient_name, storage_location, customizable FROM Ingredients;')
+        .then(query_res => {
+            for (let i = 0; i < query_res.rowCount; i++){
+                locations.push(query_res.rows[i]);
+            }
+            // console.log(locations);
+            // Send response inside the .then() block 
+            res.send(locations);      
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error getting ingredient locations:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+}
+
+/**
+ * Retrieves ingredient data including name and storage location.
+ * 
+ * @param {object} req - The request object.
+ * @param {object} res - The response object to send back the ingredient data.
+ * @param {function} next - The next middleware function.
+ */
+function getIngLocation(req, res, next) {
+    const locations = [];
+    pool
+        .query('SELECT ingredient_name, storage_location FROM Ingredients;')
+        .then(query_res => {
+            for (let i = 0; i < query_res.rowCount; i++){
+                locations.push(query_res.rows[i]);
+            }
+            // console.log(locations);
+            // Send response inside the .then() block 
+            res.send(locations);      
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error getting ingredient locations:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+}
+
+var orderNumber = 0;
+
+/**
+ * Retrieves the maximum order number from the database and increments it by one.
+ * 
+ * @param {object} req - The request object.
+ * @param {object} res - The response object to send back the incremented order number.
+ * @param {function} next - The next middleware function.
+ */
+function getOrderNumber(req, res, next) {
+    const orderNumQ = [];
+    pool
+        .query('SELECT MAX(order_number) AS max FROM Customer_Orders;')
+        .then(query_res => {
+            for (let i = 0; i < query_res.rowCount; i++){
+                orderNumQ.push(query_res.rows[i]);
+            }
+            orderNum = orderNumQ[0].max + 1;
+            console.log("in getOrder: ", orderNum); 
+            res.send(orderNumQ);  
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error executing query:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+}
+
+/**
+ * Inserts a new customer order into the database along with its associated details and customizations.
+ * 
+ * @param {object} req - The request object containing order details and selected items.
+ * @param {object} res - The response object to send back the status of the order insertion.
+ * @param {function} next - The next middleware function.
+ */
+function submitOrder(req, res, next) {
+    const { orderNum, total, order_time, order_date, notes, selectedItems } = req.body;
+    // const randomNumber = Math.floor(Math.random() * (100000 - 80000 + 1)) + 80000;
+    // console.log(randomNumber);
+    // Add new customer order
+
+    console.log("in submitOrder: ", orderNum);
+
+    pool.query(
+        "INSERT INTO Customer_Orders (order_number, total_cost, order_time, order_date, order_status, notes) VALUES ($1, $2, $3, $4, 1, $5)",
+        [orderNum, total, order_time, order_date, notes]
+    )
+    .then(() => {
+        console.log(`Order Number ${orderNum} added successfully`);
+        res.status(200).send('Customer Order added');
+
+        Object.values(selectedItems).forEach(item => {
+
+            const menuItemIngredients = item.ingredients[0];
+
+            item.ingredients.slice(1).forEach(currList =>{
+
+                const customized = ingredientsDiffer(currList, menuItemIngredients);
+                console.log("checking customized bool: ", customized, currList, "compared to ", menuItemIngredients);   
+                // Update customer_order_details
+                pool.query(
+                    "INSERT INTO customer_order_details (menu_item, order_number, quantity, customized) VALUES ($1, $2, $3, $4) RETURNING id",
+                    [item.name, orderNum, 1, customized], 
+                    (err, detailResult) => {
+                        if (err) {
+                            console.error('Error updating customer_order_details:', err);
+                            return;
+                        }
+
+                        const detailId = detailResult.rows[0].id;
+                        console.log("customer details updated: ", detailId);
+                        if (customized) {
+                            // Insert customizations into customer_customizations only if quantities differ
+                            currList.forEach((ingredient, index) => {
+                                const { name, quantity } = ingredient;
+                                if (menuItemIngredients[index].quantity !== ingredient.quantity) {
+                                    pool.query(
+                                        "INSERT INTO customer_customizations (order_detail_id, ingredient, quantity_change) VALUES ($1, $2, $3)",
+                                        [detailId, ingredient.name, ingredient.quantity],
+                                        (err) => {
+                                            if (err) {
+                                                console.error('Error adding customer customization:', err);
+                                            }
+                                        }
+                                    );
+                                }
+                            });
+                        }
+                    }
+
+                );
+            });
+        });
+    })
+    .catch(err => {
+        console.error('Error adding customer order:', err);
+        res.status(500).send('Internal Server Error');
+    });
+}
+
+/**
+ * Retrieves current orders along with their details and customizations from the database.
+ * 
+ * @param {object} req - The request object.
+ * @param {object} res - The response object to send back the current orders.
+ * @param {function} next - The next middleware function.
+ */
+function getCurrentOrders(req, res, next) {
+    // Fetch orders
+    pool.query(
+        "SELECT * FROM Customer_Orders WHERE order_status = 1"
+    )
+    .then(orderResult => {
+        // Array to store orders
+        const orders = orderResult.rows;
+
+        // Fetch details for each order
+        const promises = orders.map(order => {
+            return pool.query(
+                "SELECT * FROM customer_order_details WHERE order_number = $1",
+                [order.order_number]
+            );
+        });
+
+        // Execute all detail queries
+        return Promise.all(promises)
+            .then(detailResults => {
+                // Add order details to respective orders
+                detailResults.forEach((detailResult, index) => {
+                    orders[index].orderDetails = detailResult.rows;
+                });
+
+                // Fetch customizations for details where customized is true
+                const customizationPromises = [];
+                orders.forEach(order => {
+                    order.orderDetails.forEach(detail => {
+                        if (detail.customized) {
+                            customizationPromises.push(
+                                pool.query(
+                                    "SELECT * FROM customer_customizations WHERE order_detail_id = $1",
+                                    [detail.id]
+                                )
+                                .then(customizationResult => {
+                                    detail.customizations = customizationResult.rows;
+                                })
+                            );
+                        }
+                        else
+                        {
+                            detail.customizations = [];
+                        }
+                    });
+                });
+
+                // Execute all customization queries
+                return Promise.all(customizationPromises)
+                    .then(() => {
+                        // Send response with orders
+                        res.status(200).json(orders);
+                    });
+            });
+    })
+    .catch(err => {
+        console.error('Error fetching orders:', err);
+        res.status(500).send('Internal Server Error');
+    });
+}
+
+/**
+ * Inserts customer order details into the database based on the selected items.
+ * 
+ * @param {object} req - The request object containing order number and selected items.
+ * @param {object} res - The response object to send back the status of the order details insertion.
+ * @param {function} next - The next middleware function.
+ */
+function submitOrderDetails(req, res, next) {
+    const { orderNum, selectedItems } = req.body;
+
+    console.log("in submit order details", selectedItems);
+    let customerOrderDetailsSQL = "INSERT INTO Customer_Order_Details (menu_item, order_number, quantity) VALUES ";
+
+    Object.entries(selectedItems).forEach(([itemName, {item, quantity, price}]) => {
+        customerOrderDetailsSQL += `('${itemName}', '${orderNum}', '${quantity}'), `;
+    });
+
+    // Remove the trailing comma and space
+    customerOrderDetailsSQL = customerOrderDetailsSQL.slice(0, -2);
+
+    console.log(customerOrderDetailsSQL);
+
+    pool.query(
+        customerOrderDetailsSQL
+    )
+    .then(() => {
+        console.log(`Customer Order details ${orderNum} added successfully`);
+        res.status(200).send('Customer Order Details added');
+    })
+    .catch(err => {
+        console.error('Error adding customer order details:', err);
+        res.status(500).send('Internal Server Error');
+    });
+}
+
+/**
+ * Inserts a new customer order along with its associated details and customizations into the database.
+ * 
+ * @param {object} req - The request object containing order details and selected items.
+ * @param {object} res - The response object to send back the status of the order insertion.
+ * @param {function} next - The next middleware function.
+ */
+function submitOrderAll(req, res, next) {
+    const { orderNum, total, order_time, order_date, notes, selectedItems } = req.body;
+
+    console.log("in submitOrderAll: ", orderNum);
+
+    console.log(req.body);
+
+    console.log('Database connection status:', pool._ending ? 'Disconnected' : 'Connected');
+
+    // Start transaction
+    pool.query('BEGIN', (err) => {
+        if (err) {
+            console.error('Error beginning transaction:', err);
+            return res.status(500).send('Internal Server Error');
+        }
+
+        console.log('Transaction began successfully');
+
+
+        // Insert new customer order
+        pool.query(
+            "INSERT INTO Customer_Orders (order_number, total_cost, order_time, order_date, order_status, notes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING order_number ",
+            [orderNum, total, order_time, order_date, 1, notes], // Set order_status to 1
+            (err, orderResult) => {
+                if (err) {
+                    console.error('Error adding customer order:', err);
+                    // Rollback the transaction
+                    pool.query('ROLLBACK', (rollbackErr) => {
+                        if (rollbackErr) {
+                            console.error('Error rolling back transaction:', rollbackErr);
+                        }
+                        res.status(500).send('Internal Server Error');
+                    });
+                    return;
+                }
+                const orderId = orderResult.rows[0].order_number;
+
+                console.log("customer order updated: ", orderNum, orderId);
+
+                // // Iterate over selected items
+                // Object.values(selectedItems).forEach(item => {
+
+                //     const menuItemIngredients = item.ingredients[0];
+
+                //     item.ingredients.slice(1).forEach(currList =>{
+
+                //         const customized = ingredientsDiffer(currList, menuItemIngredients);
+
+                //         // Update customer_order_details
+                //         pool.query(
+                //             "INSERT INTO customer_order_details (menu_item, order_number, quantity, customized) VALUES ($1, $2, $3, $4) RETURNING id",
+                //             [item.name, orderId, 1, customized], 
+                //             (err, detailResult) => {
+                //                 if (err) {
+                //                     console.error('Error updating customer_order_details:', err);
+                //                     return;
+                //                 }
+
+                //                 const detailId = detailResult.rows[0].id;
+                //                 console.log("customer details updated: ", detailId);
+                //                 if (customized) {
+                //                     // Insert customizations into customer_customizations only if quantities differ
+                //                     currList.forEach((ingredient, index) => {
+                //                         const { name, quantity } = ingredient;
+                //                         if (menuItemIngredients[index].quantity !== ingredient.quantity) {
+                //                             const quantityChange = ingredient.quantity - menuItemIngredients[index].quantity;
+                //                             pool.query(
+                //                                 "INSERT INTO customer_customizations (order_detail_id, ingredient, quantity_change) VALUES ($1, $2, $3)",
+                //                                 [detailId, ingredient.name, quantityChange],
+                //                                 (err) => {
+                //                                     if (err) {
+                //                                         console.error('Error adding customer customization:', err);
+                //                                     }
+                //                                 }
+                //                             );
+                //                         }
+                //                     });
+                //                 }
+                //             }
+
+                //         );
+                //     });
+                // });
+
+                // Commit the transaction
+                pool.query('COMMIT', (commitErr) => {
+                    if (commitErr) {
+                        console.error('Error committing transaction:', commitErr);
+                        res.status(500).send('Internal Server Error');
+                    } else {
+                        console.log(`Order Number ${orderNum} added successfully`);
+                        res.status(200).send('Customer Order added');
+                    }
+                });
+            }
+        );
+    });
+}
+
+/**
+ * Checks if the ingredients of an item differ from the ingredients in the menu.
+ * 
+ * @param {array} itemIngredients - The ingredients of the item.
+ * @param {array} menuItemIngredients - The ingredients of the menu item.
+ * @returns {boolean} - Returns true if there is any difference, false otherwise.
+ */
+function ingredientsDiffer(itemIngredients, menuItemIngredients) {
+    for(let i = 0; i < itemIngredients.length; i++) {
+        if(itemIngredients[i].quantity !== menuItemIngredients[i].quantity) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Updates the quantity of ingredients in the database based on the ingredients used in the order.
+ * 
+ * @param {object} req - The request object containing total ingredients used in the order.
+ * @param {object} res - The response object to send back the status of the ingredient update.
+ * @param {function} next - The next middleware function.
+ */
+function submitOrderIngredients(req, res, next) {
+    const { totalIngredients } = req.body;
+
+    let sql = "UPDATE ingredients SET quantity = CASE ";
+
+    Object.keys(totalIngredients).forEach((ingredient) => {
+        const quantity = totalIngredients[ingredient];
+        sql += `WHEN ingredient_name = '${ingredient}' THEN quantity - ${quantity} `;
+    });
+
+    sql += "ELSE quantity END";
+
+    // execute SQL query
+    pool.query(sql, (err) => {
+        if (err) {
+            console.error('Error updating ingredients:', err);
+            res.status(500).send('Internal Server Error');
+        } else {
+            console.log("Ingredients updated successfully.");
+            res.status(200).send('Ingredients updated');
+        }
+    });
+}
+
+// Array for saved order data
+let savedData = [];
+
+/**
+ * Stores the submitted order data in the server.
+ * 
+ * @param {object} req - The request object containing selected items.
+ * @param {object} res - The response object to send back the status of the order saving.
+ * @param {function} next - The next middleware function.
+ */
+function saveOrder(req, res, next) {
+    const { selectedItems } = req.body;
+    // Store the submitted data (e.g., in a database)
+    savedData = selectedItems; // Assuming selectedItems is an array of selected items
+    // Send back a success response
+    res.status(200).json({ message: "Order Saved successfully" });
+}
+
+/**
+ * Retrieves the saved order data from the server.
+ * 
+ * @param {object} req - The request object.
+ * @param {object} res - The response object to send back the saved order data.
+ * @param {function} next - The next middleware function.
+ */
+function getSavedData(req, res, next) {
+    // Send the array of submitted items as a response
+    res.status(200).json(savedData);
+}
+
+/**
+ * Retrieves all customer orders from the database.
+ * 
+ * @param {object} req - The request object.
+ * @param {object} res - The response object to send back the customer orders.
+ * @param {function} next - The next middleware function.
+ */
+function getCustomerOrders(req, res, next)
+{
+    const orders = [];
+    pool
+        .query('SELECT * FROM customer_orders;')
+        .then(query_res => {
+            for (let i = 0; i < query_res.rowCount; i++){
+                orders.push(query_res.rows[i]);
+            }
+            // console.log(seasonalItems);
+            // Send response inside the .then() block 
+            res.send(orders);      
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error executing query:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+
+}
+
+/**
+ * Updates the status of a customer order in the database.
+ * 
+ * @param {object} req - The request object containing order_status and order_number.
+ * @param {object} res - The response object to send back the status of the order update.
+ * @param {function} next - The next middleware function.
+ */
+function updateCustomerOrder(req, res, next) {
+    const { order_status, order_number } = req.body; // Destructure order_status and order_number from req.body
+
+    pool.query('UPDATE customer_orders SET order_status = $1 WHERE order_number = $2', [order_status, order_number])
+        .then(() => {
+            res.status(200).send('Customer order has been updated');
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error executing query:', err);
+            res.status(500).send('Internal Server Error');
+        });
+}
+
+/**
+ * Retrieves current customer orders (order_status = 1) from the database.
+ * 
+ * @param {object} req - The request object.
+ * @param {object} res - The response object to send back the current customer orders.
+ * @param {function} next - The next middleware function.
+ */
+function getCustomerOrdersCurrent(req, res, next)
+{
+    const orders = [];
+    pool
+        .query('SELECT * FROM customer_orders where order_status = 1;')
+        .then(query_res => {
+            for (let i = 0; i < query_res.rowCount; i++){
+                orders.push(query_res.rows[i]);
+            }
+            // console.log(seasonalItems);
+            // Send response inside the .then() block 
+            console.log("this is the orders");
+            console.log(orders);
+            res.send(orders);      
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error executing query:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+
+}
+
+/**
+ * @function getOrderDetails
+ * Retrieves current customer orders (order_status = 1) from the database.
+ * @param {object} req - The request object.
+ * @param {object} res - The response object to send back the current customer orders.
+ * @param {function} next - The next middleware function.
+ */
+router.get('/customerOrderDetails/:order_number', async (req, res) => {
+    const { order_number } = req.params;
+    const orderDetails = [];
+    pool
+    .query('SELECT * FROM customer_order_details WHERE order_number = $1', [order_number])
+    .then(query_res => {
+        for (let i = 0; i < query_res.rowCount; i++){
+            orderDetails.push(query_res.rows[i]);
+        }
+        res.send(orderDetails);      
+    })
+    .catch(err => {
+        console.error('Error executing query:', err);
+        res.status(500).send('Internal Server Error');      
+    });
+});
+
+/**
+ * @function getOrderCustomizations
+ * Retrieves customizations for a specific order detail ID from the database.
+ * 
+ * @param {object} req - The request object containing the order_detail_id parameter.
+ * @param {object} res - The response object to send back the customizations.
+ */
+router.get('/customerOrderCustomizations/:order_detail_id', async (req, res) => {
+    const { order_detail_id } = req.params;
+    const customizations = [];
+    console.log("this is the order detail id");
+    console.log(order_detail_id);
+    pool
+        .query('SELECT * FROM customer_customizations WHERE order_detail_id = $1', [order_detail_id])
+        .then(query_res => {
+            for (let i = 0; i < query_res.rowCount; i++){
+                customizations.push(query_res.rows[i]);
+            }
+            // Send response inside the .then() block 
+            console.log(customizations);
+            res.send(customizations);      
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error executing query:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+});
+
+
+router.get("/", getMenuItems);
+router.get("/entrees", getEntrees);
+router.get("/sides", getSides);
+router.get("/desserts", getDesserts);
+router.get("/beverages", getBeverages);
+router.get("/seasonals", getSeasonals);
+router.get("/ingredientData", getIngredientData);
+router.get("/location", getIngLocation);
+router.get("/orderNum", getOrderNumber);
+router.get("/customerOrders", getCustomerOrders);
+router.get("/customerOrdersCurrent", getCustomerOrdersCurrent);
+router.put("/update", updateCustomerOrder);
+router.post("/submit", submitOrder);
+router.post("/submitDetails", submitOrderDetails);
+router.put("/submitIngredients", submitOrderIngredients);
+router.get("/currentOrders", getCurrentOrders);
+router.post("/submitOrderAll", submitOrderAll);
+router.post("/save", saveOrder);
+router.get("/savedData", getSavedData);
+
+module.exports = router;

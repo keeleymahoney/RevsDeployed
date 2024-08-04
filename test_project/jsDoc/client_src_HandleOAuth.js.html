@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/HandleOAuth.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/HandleOAuth.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { Component } from "react";
+import "./App.css";
+
+/**
+ * @author Brandon Cisneros
+ * Component for HandleOAuth
+ */
+class HandleOAuth extends Component {
+    /**
+     * Constructs a new instance of the HandleOauth component
+     * 
+     * @param {object} props The properties passed to the component.
+     */
+    constructor(props) {
+        super(props);
+        this.state = {};
+    }
+
+    /**
+     * Executes when the component is mounted.
+     * Calls methods to either recieve OAuth token and route accordingly, or
+     * initiates Google OAuth 2.0 flow.
+     * This lifecycle method is invoked immediately after a component is mounted.
+     */
+    componentDidMount() {
+      console.log('1');
+      var YOUR_CLIENT_ID = '726678901306-odlt23m8u05eh9imf8jovprsfdmvgmg3.apps.googleusercontent.com';
+      var YOUR_REDIRECT_URI = 'https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/handleOAuth';
+      var fragmentString = window.location.hash.substring(1);
+    
+      // Parse query string to see if page request is coming from OAuth 2.0 server.
+      var params = {};
+      var regex = /([^&amp;=]+)=([^&amp;]*)/g, m;
+      while (m = regex.exec(fragmentString)) {
+        params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+      }
+      console.log('2');
+
+      /*
+       * Requests GMail API information and routes accordingly for authorized users
+       */
+      this.trySampleRequest = () => {
+        console.log('5');
+        var params = JSON.parse(localStorage.getItem('oauth2-test-params'));
+        if (params &amp;&amp; params['access_token']) {
+          console.log('Login Initiated');
+
+          var authUser = {};
+          fetch("https://gmail.googleapis.com/gmail/v1/users/me/profile", {
+            method: "GET",
+            headers: {
+              "Authorization": "Bearer "+params['access_token']
+          } 
+        })
+              .then(res => res.json())
+              .then(res => {authUser = res;})
+              .then( authuser => {
+                console.log(JSON.stringify(authUser));
+                console.log(authUser["emailAddress"]);
+                console.log(authUser.emailAddress);
+                console.log(JSON.stringify(authUser.emailAddress));
+                if (authUser.emailAddress == "brandonocisneros@gmail.com") {
+                  window.location.href = "https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/ingredients"
+                }
+                else if (authUser.emailAddress == "alnotha@gmail.com") {
+                  window.location.href = "https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/ingredients"
+                }
+                else if (authUser.emailAddress == "keeley.a.mahoney@gmail.com") {
+                  window.location.href = "https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/ingredients"
+                }
+                else if (authUser.emailAddress == "joannechanliu@tamu.edu") {
+                  window.location.href = "https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/ingredients"
+                }
+                else {
+                  localStorage.setItem('oauth2-test-params', '{}');
+                  window.location.href = "https://project-3-full-stack-agile-web-project-3-jvj4.onrender.com/"
+                }      
+              }
+              )
+              .catch(err => console.error(err));
+        } else {
+          this.oauth2SignIn();
+        }
+      }
+    
+      /*
+       * Create form to request access token from Google's OAuth 2.0 server.
+       */
+      this.oauth2SignIn = () => {
+        console.log('6');
+        // Google's OAuth 2.0 endpoint for requesting an access token
+        var oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
+    
+        // Create element to open OAuth 2.0 endpoint in new window.
+        var form = document.createElement('form');
+        form.setAttribute('method', 'GET'); // Send as a GET request.
+        form.setAttribute('action', oauth2Endpoint);
+    
+        // Parameters to pass to OAuth 2.0 endpoint.
+        var params = {'client_id': YOUR_CLIENT_ID,
+                      'redirect_uri': YOUR_REDIRECT_URI,
+                      'scope': 'https://www.googleapis.com/auth/gmail.metadata',
+                      'state': 'try_sample_request',
+                      'include_granted_scopes': 'true',
+                      'response_type': 'token'};
+    
+        // Add form parameters as hidden input values.
+        for (var p in params) {
+          var input = document.createElement('input');
+          input.setAttribute('type', 'hidden');
+          input.setAttribute('name', p);
+          input.setAttribute('value', params[p]);
+          form.appendChild(input);
+        }
+        console.log('7');
+        // Add form to page and submit it to open the OAuth 2.0 endpoint.
+        document.body.appendChild(form);
+        form.submit();
+      }
+
+
+      if (Object.keys(params).length > 0) {
+        console.log('3');
+        localStorage.setItem('oauth2-test-params', JSON.stringify(params) );
+        if (params['state'] &amp;&amp; params['state'] === 'try_sample_request') {
+          console.log('4');
+          this.trySampleRequest();
+        }
+      }
+    
+
+
+      this.trySampleRequest();
+
+  }
+  
+    /**
+     * Renders the HandleOAuth screen component.
+     * @returns {JSX.Element} The JSX element representing the HandleOauth screen.
+     */
+    render() {
+        // console.log(this.state.apiResponse);
+        return (&lt;div>&lt;/div>);
+    }
+}
+
+export default HandleOAuth;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-AddEmployeePopup.html">AddEmployeePopup</a></li><li><a href="module-App.html">App</a></li><li><a href="module-ConfirmationPopup.html">ConfirmationPopup</a></li><li><a href="module-CustomerOrdersAPI.html">CustomerOrdersAPI</a></li><li><a href="module-DisplayOrder.html">DisplayOrder</a></li><li><a href="module-EditEmployeePopup.html">EditEmployeePopup</a></li><li><a href="module-EditIngredientPopup.html">EditIngredientPopup</a></li><li><a href="module-EmployeesRouter.html">EmployeesRouter</a></li><li><a href="module-Ingredients.html">Ingredients</a></li><li><a href="module-IngredientsRouter.html">IngredientsRouter</a></li><li><a href="module-MenuItemIngredientsRouter.html">MenuItemIngredientsRouter</a></li><li><a href="module-MenuItemsAPI.html">MenuItemsAPI</a></li><li><a href="module-SupplierOrderRouter.html">SupplierOrderRouter</a></li><li><a href="module-Suppliers.html">Suppliers</a></li><li><a href="module-Trends.html">Trends</a></li><li><a href="module-TrendsAPI.html">TrendsAPI</a></li><li><a href="module-landingAPI.html">landingAPI</a></li></ul><h3>Classes</h3><ul><li><a href="AddIngredientPopup.html">AddIngredientPopup</a></li><li><a href="AddMenuItemPopup.html">AddMenuItemPopup</a></li><li><a href="CashierOrders.html">CashierOrders</a></li><li><a href="CashierSubmit.html">CashierSubmit</a></li><li><a href="CustomerOrders.html">CustomerOrders</a></li><li><a href="CustomerSubmit.html">CustomerSubmit</a></li><li><a href="EditMenuItemPopup.html">EditMenuItemPopup</a></li><li><a href="Employees.html">Employees</a></li><li><a href="HandleOAuth.html">HandleOAuth</a></li><li><a href="Kitchen.html">Kitchen</a></li><li><a href="Landing.html">Landing</a></li><li><a href="ManagerOrders.html">ManagerOrders</a></li><li><a href="ManagerSubmit.html">ManagerSubmit</a></li><li><a href="MenuBoard.html">MenuBoard</a></li><li><a href="MenuBoard2.html">MenuBoard2</a></li><li><a href="MenuBoardImages.html">MenuBoardImages</a></li><li><a href="MenuItemPopUp.html">MenuItemPopUp</a></li><li><a href="MenuManager.html">MenuManager</a></li><li><a href="NewSupplierOrderForm.html">NewSupplierOrderForm</a></li><li><a href="OrderCompletePopUp.html">OrderCompletePopUp</a></li><li><a href="OrderDisplays.html">OrderDisplays</a></li><li><a href="RegularKitchen.html">RegularKitchen</a></li><li><a href="Settings.html">Settings</a></li><li><a href="SupplierOrderDetailsPopUp.html">SupplierOrderDetailsPopUp</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed May 01 2024 01:21:47 GMT-0500 (Central Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+\i Ingredients.sql
+\i Menu_Items.sql
+\i Menu_Item_Ingredients.sql
+\i Supplier_Orders.sql
+\i Supplier_Order_Details.sql
+\i Employee.sql
+\i Customer_Orders.sql
+\i Customer_Order_Details.sql
+\i Customer_Customizations.sql
+\i Update_Gluten_Veg.sql
+\i Historical_Order_Data.sql

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: api/routes/menuItemsAPI.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: api/routes/menuItemsAPI.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Module for managing menu items in the database.
+ * @module MenuItemsAPI
+ */
+
+var express = require("express");
+var router = express.Router();
+const { Pool } = require('pg');
+const dotenv = require('dotenv').config();
+
+// Create express app
+const app = express();
+const port = 3001;
+
+// Create pool
+const pool = new Pool({
+    user: process.env.PSQL_USER,
+    host: process.env.PSQL_HOST,
+    database: process.env.PSQL_DATABASE,
+    password: process.env.PSQL_PASSWORD,
+    port: process.env.PSQL_PORT,
+    ssl: {rejectUnauthorized: false}
+});
+
+// Add process hook to shutdown pool
+process.on('SIGINT', function() {
+    pool.end();
+    console.log('Application successfully shutdown');
+    process.exit(0);
+});
+
+app.set("view engine", "ejs");
+
+/**
+ * Retrieves menu items from the database and sends them as a response.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+function getMenuItems(req, res, next) {
+    const menuItems = [];
+    pool
+        .query('SELECT * FROM Menu_Items;')
+        .then(query_res => {
+            for (let i = 0; i &lt; query_res.rowCount; i++){
+                menuItems.push(query_res.rows[i]);
+            }
+            //console.log(menuItems);
+            // Send response inside the .then() block 
+            res.send(menuItems);      
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error executing query:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+}
+
+/**
+ * Retrieves entree items from the database and sends them as a response.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+function getEntrees(req, res, next) {
+    const entreeItems = [];
+    pool
+        .query('SELECT * FROM Menu_Items WHERE Menu_Category = \'Entree\';')
+        .then(query_res => {
+            for (let i = 0; i &lt; query_res.rowCount; i++){
+                entreeItems.push(query_res.rows[i]);
+            }
+            console.log(entreeItems);
+            // Send response inside the .then() block 
+            res.send(entreeItems);      
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error executing query:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+}
+
+/**
+ * Deletes a menu item from the database.
+ * 
+ * @param {Object} req - The request object containing the item_name to be deleted.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+function deleteItem(req, res, next) {
+    const { item_name } = req.body;
+
+    //set the quantity to be negative, indicating it no longer exists
+    pool.query('UPDATE menu_items SET price = -1 WHERE item_name = $1', [item_name])
+        .then(() => {
+            console.log(`Menu Item ${item_name} quantity updated to negative`);
+            res.status(200).send('Menu item deleted successfully');
+        })
+        .catch(err => {
+            console.error('Error deleting menu item:', err);
+            res.status(500).send('Internal Server Error');
+        });
+}
+
+/**
+ * Add a new item to the menu_items table in the database.
+ * 
+ * @param {object} req - The request object containing the item details in the body.
+ * @param {object} res - The response object to send back the result.
+ * @param {function} next - The next middleware function.
+ */
+function addItem(req, res, next) {
+    const { item_name, price, menu_category, descript, picture, promoted, vegetarian, glutenfree } = req.body;
+
+    //set the quantity to be negative, indicating it no longer exists
+    pool.query('INSERT INTO menu_items (Item_Name, Price, Menu_Category, descript, vegetarian, glutenfree, promoted, Picture) VALUES($1, $2, $3, $4, $7, $8, $6, $5);', [item_name, price, menu_category, descript, picture, promoted, vegetarian, glutenfree])
+        .then(() => {
+            console.log("Menu Item ${item_name} has been added");
+            res.status(200).send('Menu item added successfully');
+        })
+        .catch(err => {
+            console.error('Error adding menu item:', err);
+            res.status(500).send('Internal Server Error');
+        });
+}
+
+/**
+ * Edit an existing item in the menu_items table in the database.
+ * 
+ * @param {object} req - The request object containing the updated item details in the body.
+ * @param {object} res - The response object to send back the result.
+ * @param {function} next - The next middleware function.
+ */
+function editItem(req, res, next) {
+    const { price, menu_category, item_name, picture, descript, promoted, glutenfree, vegetarian } = req.body;
+    console.log(item_name);
+    console.log(price);
+    console.log(menu_category);
+
+    //set the quantity to be negative, indicating it no longer exists
+    pool.query('UPDATE menu_items SET price = $1, menu_category = $2, descript = $3, vegetarian = $7, glutenfree = $8, promoted = $6, Picture = $4 WHERE item_name = $5', [price, menu_category, descript, picture, item_name, promoted, vegetarian, glutenfree])
+        .then(() => {
+            console.log(`Menu Item ${item_name} price and category updated`);
+            res.status(200).send('Menu Item updated successfully');
+        })
+        .catch(err => {
+            console.error('Error updating menu item:', err);
+            res.status(500).send('Internal Server Error');
+        });
+}
+
+/**
+ * Retrieve all side items from the menu_items table in the database.
+ * 
+ * @param {object} req - The request object.
+ * @param {object} res - The response object to send back the side items.
+ * @param {function} next - The next middleware function.
+ */
+function getSides(req, res, next) {
+    const sideItems = [];
+    pool
+        .query('SELECT * FROM Menu_Items WHERE Menu_Category = \'Side\';')
+        .then(query_res => {
+            for (let i = 0; i &lt; query_res.rowCount; i++){
+                sideItems.push(query_res.rows[i]);
+            }
+            // console.log(sideItems);
+            // Send response inside the .then() block 
+            res.send(sideItems);      
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error executing query:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+}
+
+/**
+ * Retrieve all dessert items from the menu_items table in the database.
+ * 
+ * @param {object} req - The request object.
+ * @param {object} res - The response object to send back the results.
+ * @param {function} next - The next middleware function.
+ */
+function getDesserts(req, res, next) {
+    const dessertItems = [];
+    pool
+        .query('SELECT * FROM Menu_Items WHERE Menu_Category = \'Dessert\';')
+        .then(query_res => {
+            for (let i = 0; i &lt; query_res.rowCount; i++){
+                dessertItems.push(query_res.rows[i]);
+            }
+            // console.log(dessertItems);
+            // Send response inside the .then() block 
+            res.send(dessertItems);      
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error executing query:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+}
+
+/**
+ * Retrieve all beverage items from the menu_items table in the database.
+ * 
+ * @param {object} req - The request object.
+ * @param {object} res - The response object to send back the results.
+ * @param {function} next - The next middleware function.
+ */
+function getBeverages(req, res, next) {
+    const beverageItems = [];
+    pool
+        .query('SELECT * FROM Menu_Items WHERE Menu_Category = \'Beverage\';')
+        .then(query_res => {
+            for (let i = 0; i &lt; query_res.rowCount; i++){
+                beverageItems.push(query_res.rows[i]);
+            }
+            // console.log(beverageItems);
+            // Send response inside the .then() block 
+            res.send(beverageItems);      
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error executing query:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+}
+
+/**
+ * Retrieve all seasonal items from the menu_items table in the database.
+ * 
+ * @param {object} req - The request object.
+ * @param {object} res - The response object to send back the results.
+ * @param {function} next - The next middleware function.
+ */
+function getSeasonals(req, res, next) {
+    const seasonalItems = [];
+    pool
+        .query('SELECT * FROM Menu_Items WHERE Menu_Category = \'Seasonal\';')
+        .then(query_res => {
+            for (let i = 0; i &lt; query_res.rowCount; i++){
+                seasonalItems.push(query_res.rows[i]);
+            }
+            // console.log(seasonalItems);
+            // Send response inside the .then() block 
+            res.send(seasonalItems);      
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error executing query:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+}
+
+/**
+ * Retrieve all promoted items from the menu_items table in the database.
+ * 
+ * @param {object} req - The request object.
+ * @param {object} res - The response object to send back the results.
+ * @param {function} next - The next middleware function.
+ */
+function getPromotions(req, res, next) {
+    const seasonalItems = [];
+    pool
+        .query('SELECT * FROM Menu_Items WHERE promoted = true;')
+        .then(query_res => {
+            for (let i = 0; i &lt; query_res.rowCount; i++){
+                seasonalItems.push(query_res.rows[i]);
+            }
+            res.send(seasonalItems);      
+        })
+        .catch(err => {
+            // Handle any errors that occur during the query
+            console.error('Error executing query:', err);
+            res.status(500).send('Internal Server Error');      
+    });
+}
+/**
+ * Fetches weather data from the OpenWeatherMap API based on specified coordinates.
+ * 
+ * @param {object} req - The request object.
+ * @param {object} res - The response object to send back the weather data.
+ * @param {function} next - The next middleware function.
+ */
+function getWeather(req, res, next) {
+
+    //A&amp;M Coordinates
+    const latitude = "30.615011";
+    const longitude = "-96.342476";
+
+    const api_url = 'https://api.openweathermap.org/data/2.5';
+    const api_key = '2287b881cbc011fa0af77a7c93b7d290';
+    const app_url = 'https://openweathermap.org/img/w';
+
+    return fetch(
+        `${api_url}/weather/?lat=${latitude}&amp;lon=${longitude}&amp;units=metric&amp;APPID=${api_key}`
+    )
+        .then(res => res.json())
+        .then(result => {
+            // setData(result)
+            console.log(result);
+            res.send(result);
+    });
+}
+
+/**
+ * Updates the database to set selected menu items as promoted.
+ * 
+ * @param {object} req - The request object containing the selected items for promotion.
+ * @param {object} res - The response object to send back the result.
+ * @param {function} next - The next middleware function.
+ */
+function savePromotions(req, res, next) {
+    const { selectedItems } = req.body;
+    
+    if(!selectedItems || selectedItems.length === 0) {
+        console.log('No items selected for promotion');
+        return res.status(400).send('No items selected for promotion');
+    }
+
+    pool.query(
+        `UPDATE Menu_items 
+         SET promoted = CASE 
+                          WHEN item_name IN (${selectedItems.map((item, index) => `$${index + 1}`).join(',')}) THEN true 
+                          ELSE false 
+                        END`,
+        selectedItems
+    )
+    .then(() => {
+        console.log(`Database updated for promotions`);
+        res.status(200).send('Promotions updated');
+    })
+    .catch(err => {
+        console.error('Error updating promotions:', err);
+        res.status(500).send('Internal Server Error');
+    });
+}
+
+// Use getIngredients function in the route handler
+router.get("/", getMenuItems);
+router.get("/entrees", getEntrees);
+router.get("/sides", getSides);
+router.get("/desserts", getDesserts);
+router.get("/beverages", getBeverages);
+router.get("/seasonals", getSeasonals);
+router.get("/promotions", getPromotions);
+router.get("/weather", getWeather);
+router.put("/delete", deleteItem);
+router.put("/edit", editItem);
+router.post("/add", addItem);
+router.post("/savePromotions", savePromotions);
+
+module.exports = router;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-AddEmployeePopup.html">AddEmployeePopup</a></li><li><a href="module-App.html">App</a></li><li><a href="module-ConfirmationPopup.html">ConfirmationPopup</a></li><li><a href="module-CustomerOrdersAPI.html">CustomerOrdersAPI</a></li><li><a href="module-DisplayOrder.html">DisplayOrder</a></li><li><a href="module-EditEmployeePopup.html">EditEmployeePopup</a></li><li><a href="module-EditIngredientPopup.html">EditIngredientPopup</a></li><li><a href="module-EmployeesRouter.html">EmployeesRouter</a></li><li><a href="module-Ingredients.html">Ingredients</a></li><li><a href="module-IngredientsRouter.html">IngredientsRouter</a></li><li><a href="module-MenuItemIngredientsRouter.html">MenuItemIngredientsRouter</a></li><li><a href="module-MenuItemsAPI.html">MenuItemsAPI</a></li><li><a href="module-SupplierOrderRouter.html">SupplierOrderRouter</a></li><li><a href="module-Suppliers.html">Suppliers</a></li><li><a href="module-Trends.html">Trends</a></li><li><a href="module-TrendsAPI.html">TrendsAPI</a></li><li><a href="module-landingAPI.html">landingAPI</a></li></ul><h3>Classes</h3><ul><li><a href="AddIngredientPopup.html">AddIngredientPopup</a></li><li><a href="AddMenuItemPopup.html">AddMenuItemPopup</a></li><li><a href="CashierOrders.html">CashierOrders</a></li><li><a href="CashierSubmit.html">CashierSubmit</a></li><li><a href="CustomerOrders.html">CustomerOrders</a></li><li><a href="CustomerSubmit.html">CustomerSubmit</a></li><li><a href="EditMenuItemPopup.html">EditMenuItemPopup</a></li><li><a href="Employees.html">Employees</a></li><li><a href="HandleOAuth.html">HandleOAuth</a></li><li><a href="Kitchen.html">Kitchen</a></li><li><a href="Landing.html">Landing</a></li><li><a href="ManagerOrders.html">ManagerOrders</a></li><li><a href="ManagerSubmit.html">ManagerSubmit</a></li><li><a href="MenuBoard.html">MenuBoard</a></li><li><a href="MenuBoard2.html">MenuBoard2</a></li><li><a href="MenuBoardImages.html">MenuBoardImages</a></li><li><a href="MenuItemPopUp.html">MenuItemPopUp</a></li><li><a href="MenuManager.html">MenuManager</a></li><li><a href="NewSupplierOrderForm.html">NewSupplierOrderForm</a></li><li><a href="OrderCompletePopUp.html">OrderCompletePopUp</a></li><li><a href="OrderDisplays.html">OrderDisplays</a></li><li><a href="RegularKitchen.html">RegularKitchen</a></li><li><a href="Settings.html">Settings</a></li><li><a href="SupplierOrderDetailsPopUp.html">SupplierOrderDetailsPopUp</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed May 01 2024 01:21:47 GMT-0500 (Central Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

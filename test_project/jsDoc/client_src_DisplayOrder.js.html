@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/DisplayOrder.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/DisplayOrder.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { useState } from "react";
+import "./AddIngredientPopUp.css"; // Import CSS file for styling
+
+/**
+ * Component for displaying the details of a specific order.
+ * @component
+ * @param {Object} props - The props passed to the component.
+ * @param {Function} props.onClose - Callback function to close the order display popup.
+ * @param {Object[]} props.order - The array of items included in the order.
+ * @param {string} props.orderNumber - The number of the order being displayed.
+ * @author Keeley Mahoney
+ * @module DisplayOrder
+ * @returns {JSX.Element} - The JSX element representing the DisplayOrder component.
+ */
+const DisplayOrder = ({ onClose, order, orderNumber }) => {
+    /**
+     * State representing the position of the popup.
+     * @type {Object}
+     * @property {number} popupPosition.top - The top position of the popup relative to the viewport.
+     */
+    const [popupPosition] = useState({ top: window.scrollY });
+
+    console.log("This is the order");
+    console.log(order);
+
+    /**
+     * Renders the DisplayOrder component.
+     * @returns {JSX.Element} - The JSX element representing the DisplayOrder component.
+     */
+    return (
+        &lt;div className="popup-overlay">
+            &lt;div className="popup-content-menu" style={{ top: popupPosition.top, textAlign: "left" }}>
+                &lt;h1>Order Number: {orderNumber}&lt;/h1>
+                {order.map((item, index) => (
+                    &lt;div key={index} style={{ border: "2px solid maroon", borderRadius: "5px", padding: "10px", marginBottom: "10px", textAlign: "left" }}>
+                        &lt;div className="category-price-container">
+                            &lt;h4>{item.menu_item} - Quantity: {item.quantity}&lt;/h4>
+                        &lt;/div>
+                        &lt;div style={{ marginLeft: "40px" }}>
+                            &lt;p>&lt;strong>Customizations: &lt;/strong>&lt;/p>
+                            &lt;ul>
+                                {item.customized ? (
+                                    item.customizations.map((customization, idx) => (
+                                        &lt;li key={idx}>{customization.ingredient} - {customization.quantity_change}&lt;/li>
+                                    ))
+                                ) : (
+                                    &lt;p>-&lt;/p>
+                                )}
+                            &lt;/ul>
+                        &lt;/div>
+                    &lt;/div>
+                ))}
+                &lt;div style={{ textAlign: "center", marginTop: "20px" }}>
+                &lt;button onClick={onClose} className="close-button">Close&lt;/button>
+            &lt;/div>
+            &lt;/div>
+            {/* Close button placed immediately after the last item */}
+            
+        &lt;/div>
+    );
+};
+
+export default DisplayOrder;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-AddEmployeePopup.html">AddEmployeePopup</a></li><li><a href="module-App.html">App</a></li><li><a href="module-ConfirmationPopup.html">ConfirmationPopup</a></li><li><a href="module-CustomerOrdersAPI.html">CustomerOrdersAPI</a></li><li><a href="module-DisplayOrder.html">DisplayOrder</a></li><li><a href="module-EditEmployeePopup.html">EditEmployeePopup</a></li><li><a href="module-EditIngredientPopup.html">EditIngredientPopup</a></li><li><a href="module-EmployeesRouter.html">EmployeesRouter</a></li><li><a href="module-Ingredients.html">Ingredients</a></li><li><a href="module-IngredientsRouter.html">IngredientsRouter</a></li><li><a href="module-MenuItemIngredientsRouter.html">MenuItemIngredientsRouter</a></li><li><a href="module-MenuItemsAPI.html">MenuItemsAPI</a></li><li><a href="module-SupplierOrderRouter.html">SupplierOrderRouter</a></li><li><a href="module-Suppliers.html">Suppliers</a></li><li><a href="module-Trends.html">Trends</a></li><li><a href="module-TrendsAPI.html">TrendsAPI</a></li><li><a href="module-landingAPI.html">landingAPI</a></li></ul><h3>Classes</h3><ul><li><a href="AddIngredientPopup.html">AddIngredientPopup</a></li><li><a href="AddMenuItemPopup.html">AddMenuItemPopup</a></li><li><a href="CashierOrders.html">CashierOrders</a></li><li><a href="CashierSubmit.html">CashierSubmit</a></li><li><a href="CustomerOrders.html">CustomerOrders</a></li><li><a href="CustomerSubmit.html">CustomerSubmit</a></li><li><a href="EditMenuItemPopup.html">EditMenuItemPopup</a></li><li><a href="Employees.html">Employees</a></li><li><a href="HandleOAuth.html">HandleOAuth</a></li><li><a href="Kitchen.html">Kitchen</a></li><li><a href="Landing.html">Landing</a></li><li><a href="ManagerOrders.html">ManagerOrders</a></li><li><a href="ManagerSubmit.html">ManagerSubmit</a></li><li><a href="MenuBoard.html">MenuBoard</a></li><li><a href="MenuBoard2.html">MenuBoard2</a></li><li><a href="MenuBoardImages.html">MenuBoardImages</a></li><li><a href="MenuItemPopUp.html">MenuItemPopUp</a></li><li><a href="MenuManager.html">MenuManager</a></li><li><a href="NewSupplierOrderForm.html">NewSupplierOrderForm</a></li><li><a href="OrderCompletePopUp.html">OrderCompletePopUp</a></li><li><a href="OrderDisplays.html">OrderDisplays</a></li><li><a href="RegularKitchen.html">RegularKitchen</a></li><li><a href="Settings.html">Settings</a></li><li><a href="SupplierOrderDetailsPopUp.html">SupplierOrderDetailsPopUp</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed May 01 2024 01:21:47 GMT-0500 (Central Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

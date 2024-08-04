@@ -1,0 +1,186 @@
+.header-row {
+    font-weight: normal;
+    font-size: 22px;
+}
+
+.header-row span {
+    font-weight: bold;
+}
+
+.menu-item-box {
+    text-align: left;
+    padding-left: 10px;
+    padding-right: 10px;
+    /* border: 1px solid black; */
+    break-inside: avoid-column;
+}
+
+.menu-item-box p {
+    margin-top: 8px;
+    margin-bottom: 8px;
+    font-size: 18px;
+}
+
+.category-box {
+    border: 1px solid black;
+    padding-top: 5px;
+} 
+
+.category-box-columns {
+    column-count: 2; 
+    /* column-gap: 10px;  */
+}
+
+.menuboard-container {
+    display: flex;
+    padding: 20px;
+    padding-top: 5px;
+}
+
+.left-column {
+    flex: 1; 
+    margin: 0 5px; 
+}
+
+.middle-column {
+    flex: 1; 
+    margin: 0 5px; 
+}
+
+.right-column {
+    flex: 1; 
+    margin: 0 5px; 
+}
+
+.header {
+    background-color: #500000;
+    color: white;
+    font-weight: bold;
+    font-size: 24px;
+    padding: 10px;
+    margin-left: 100px;
+    margin-right: 100px;
+    margin-bottom: 10px;
+    margin-top: 10px;
+    display: flex;
+    flex-grow: 1; 
+    justify-content: center; 
+}
+
+.settings-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+select{
+    width: 500px;
+}
+
+.menuboard-image-column {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.menuboard-image {
+    display: inline-block;
+    padding: 10px;
+    width: 80%;
+}
+
+.menuboard-image-slideshow {
+    margin: 0 auto;
+    overflow: hidden;
+    max-width: 800px;
+}
+
+
+.slideshowDots {
+    text-align: center;
+}
+
+.slideshowDot {
+    display: inline-block;
+    height: 15px;
+    width: 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    margin: 15px 7px 0px;
+    background-color: #d3d3d3;
+}
+
+  
+.slideshowSlider {
+    white-space: nowrap;
+    transition: ease 1000ms;
+}
+
+.slide {
+    display: inline-block;
+    height: 400px;
+    width: 100%;
+    border-radius: 40px;
+}
+
+
+.slideshowDot.active {
+    background-color: #500000;
+}
+  
+.category-caption {
+    color: #500000;
+    font-weight: bold;
+}
+
+.slide p {
+    color: #500000;
+    font-size: 18px;
+}
+
+.image-right-column {
+    width: 700px; 
+    height: 700px; /* fixed height */
+    overflow: hidden; /* hide overflow content */
+    margin: 0 auto;
+}
+
+
+.menuboard-logo {
+    width: 100px;
+    height: auto;
+}
+
+.settings-button {
+    margin-left: 20px; /* Pushes the button to the right */
+}
+
+/* button {
+    width: 100%;
+} */
+
+.header-content {
+    display: flex;
+    align-items: center;
+}
+
+
+.App-header {
+    background-color: #282c34;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(10px + 2vmin);
+    color: white;
+}
+
+
+.menuboard-header {
+    background-color: #FAF4E8;
+    padding: 10px;
+    text-align: center;
+    color: black;
+}
